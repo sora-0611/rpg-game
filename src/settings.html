@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定画面</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="settings-container">
+        <h1 class="settings-title">設定画面</h1>
+        
+        <form class="settings-form">
+            <!-- BGM音量 -->
+            <div class="settings-group">
+                <label for="bgm-volume" class="settings-label">BGM音量</label>
+                <div class="slider-wrapper">
+                    <span class="slider-value-min">0</span>
+                    <div class="slider-container">
+                        <input 
+                            type="range" 
+                            id="bgm-volume" 
+                            name="bgm-volume" 
+                            min="0" 
+                            max="100" 
+                            value="100"
+                            class="slider"
+                        >
+                        <div class="slider-track">
+                            <div class="slider-fill"></div>
+                        </div>
+                    </div>
+                    <span class="slider-current">100</span>
+                    <button type="button" class="mute-button mute-icon" aria-label="BGM音量をミュート">🔇</button>
+                </div>
+            </div>
+
+            <!-- SE音量 -->
+            <div class="settings-group">
+                <label for="se-volume" class="settings-label">SE音量</label>
+                <div class="slider-wrapper">
+                    <span class="slider-value-min">0</span>
+                    <div class="slider-container">
+                        <input 
+                            type="range" 
+                            id="se-volume" 
+                            name="se-volume" 
+                            min="0" 
+                            max="100" 
+                            value="100"
+                            class="slider"
+                        >
+                        <div class="slider-track">
+                            <div class="slider-fill"></div>
+                        </div>
+                    </div>
+                    <span class="slider-current">100</span>
+                    <button type="button" class="mute-button mute-icon" aria-label="SE音量をミュート">🔇</button>
+                </div>
+            </div>
+
+            <!-- フルスクリーン（パネル） -->
+            <div class="panel">
+                <div class="panel-row">
+                    <div class="panel-left">
+                        <span class="panel-icon">⤢</span>
+                        <label for="fullscreen" class="settings-label">フルスクリーン</label>
+                    </div>
+                    <div class="panel-right">
+                        <div class="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                id="fullscreen" 
+                                name="fullscreen"
+                                class="toggle-checkbox"
+                            >
+                            <label for="fullscreen" class="toggle-label"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- テキスト速度 -->
+            <div class="settings-group">
+                <label class="settings-label">テキスト速度</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input 
+                            type="radio" 
+                            id="text-speed-fast" 
+                            name="text-speed" 
+                            value="fast"
+                            class="radio-button"
+                        >
+                        <label for="text-speed-fast" class="radio-label">早い</label>
+                    </div>
+                    <div class="radio-option">
+                        <input 
+                            type="radio" 
+                            id="text-speed-normal" 
+                            name="text-speed" 
+                            value="normal"
+                            checked
+                            class="radio-button"
+                        >
+                        <label for="text-speed-normal" class="radio-label">普通</label>
+                    </div>
+                    <div class="radio-option">
+                        <input 
+                            type="radio" 
+                            id="text-speed-slow" 
+                            name="text-speed" 
+                            value="slow"
+                            class="radio-button"
+                        >
+                        <label for="text-speed-slow" class="radio-label">遅い</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- パフォーマンス -->
+            <div class="settings-group">
+                <label class="settings-label">パフォーマンス</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input 
+                            type="radio" 
+                            id="performance-high" 
+                            name="performance" 
+                            value="high"
+                            checked
+                            class="radio-button"
+                        >
+                        <label for="performance-high" class="radio-label">高</label>
+                    </div>
+                    <div class="radio-option">
+                        <input 
+                            type="radio" 
+                            id="performance-low" 
+                            name="performance" 
+                            value="low"
+                            class="radio-button"
+                        >
+                        <label for="performance-low" class="radio-label">低</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 説明テキスト -->
+            <div class="settings-note">
+                <p>（動作が不安定な場合、低にしてください）</p>
+            </div>
+
+            <!-- 戻るボタン -->
+            <button type="button" class="back-button">戻る</button>
+        </form>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
