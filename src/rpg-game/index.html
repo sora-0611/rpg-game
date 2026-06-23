@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG Game Prototype</title>
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/screens.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <div id="main" class="app-main">
+      <!-- ===== 1. LOADING SCREEN ===== -->
+      <div id="screen-loading" class="screen">
+        <div class="loading-container">
+          <h1 class="loading-title">Now loading...</h1>
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <!-- ===== 2. TITLE SCREEN ===== -->
+      <div id="screen-title" class="screen screen--hidden">
+        <div class="title-container">
+          <h1 class="title-heading">RPG Game</h1>
+          <div class="title-buttons">
+            <button id="btn-title-newgame" class="btn btn--primary btn--large">
+              はじめから
+            </button>
+            <button id="btn-title-continue" class="btn btn--primary btn--large">
+              つづきから
+            </button>
+            <button id="btn-title-settings" class="btn btn--secondary btn--large">
+              設定
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 3. MAP SELECT SCREEN ===== -->
+      <div id="screen-maps" class="screen screen--hidden">
+        <div class="maps-container">
+          <h2 class="screen-title">マップ選択</h2>
+          <div class="maps-grid">
+            <div id="map-card-1" class="card card--map" data-map-id="1">
+              <h3 class="card-title">(仮)難易度1マップ</h3>
+              <p class="card-description">難易度: 簡単</p>
+              <button id="btn-map-select-1" class="btn btn--secondary btn--small" data-map-id="1">
+                選択
+              </button>
+              <div id="map-status-1" class="map-status"></div>
+            </div>
+            <div id="map-card-2" class="card card--map" data-map-id="2">
+              <h3 class="card-title">(仮)難易度2マップ</h3>
+              <p class="card-description">難易度: 普通</p>
+              <button id="btn-map-select-2" class="btn btn--secondary btn--small btn--disabled" data-map-id="2">
+                選択
+              </button>
+              <div id="map-status-2" class="map-status">クリアで開放</div>
+            </div>
+            <div id="map-card-3" class="card card--map" data-map-id="3">
+              <h3 class="card-title">(仮)難易度3マップ</h3>
+              <p class="card-description">難易度: 難しい</p>
+              <button id="btn-map-select-3" class="btn btn--secondary btn--small btn--disabled" data-map-id="3">
+                選択
+              </button>
+              <div id="map-status-3" class="map-status">クリアで開放</div>
+            </div>
+          </div>
+          <button id="btn-map-back" class="btn btn--secondary">戻る</button>
+        </div>
+      </div>
+
+      <!-- ===== 4. EXPLORE SCREEN ===== -->
+      <div id="screen-explore" class="screen screen--hidden">
+        <div class="explore-container">
+          <!-- Top Bar -->
+          <div class="explore-topbar">
+            <span id="explore-coin" class="explore-coin-display">コイン: 0</span>
+            <button id="btn-explore-menu" class="btn btn--icon">
+              ☰
+            </button>
+          </div>
+
+          <!-- Map Canvas Area -->
+          <div id="explore-map" class="explore-map">
+            <canvas id="canvas-map" width="400" height="400"></canvas>
+          </div>
+
+          <!-- Character Status Panel -->
+          <div class="explore-status-panel">
+            <h3>パーティー</h3>
+            <div id="explore-party" class="party-cards">
+              <div id="status-char-A" class="card card--character card--status-small">
+                <span class="card-name">キャラA</span>
+                <div class="hpbar" id="hpbar-explore-A">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="status-char-B" class="card card--character card--status-small">
+                <span class="card-name">キャラB</span>
+                <div class="hpbar" id="hpbar-explore-B">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="status-char-C" class="card card--character card--status-small">
+                <span class="card-name">キャラC</span>
+                <div class="hpbar" id="hpbar-explore-C">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">30/30</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Window -->
+          <div id="explore-message" class="message-window">
+            ゲーム開始。移動してください。
+          </div>
+        </div>
+
+        <!-- Hamburger Menu (hidden by default) -->
+        <div id="explore-menu" class="window window--menu window--hidden">
+          <h3 class="window-title">メニュー</h3>
+          <div class="menu-content">
+            <div class="menu-coin-display">
+              コイン: <span id="menu-coin">0</span>
+            </div>
+            <button id="btn-menu-maps" class="btn btn--secondary btn--block">
+              マップ変更
+            </button>
+            <button id="btn-menu-upgrade" class="btn btn--secondary btn--block">
+              強化
+            </button>
+            <button id="btn-menu-items" class="btn btn--secondary btn--block">
+              アイテム
+            </button>
+            <button id="btn-menu-settings" class="btn btn--secondary btn--block">
+              設定
+            </button>
+            <button id="btn-menu-title" class="btn btn--danger btn--block">
+              タイトルへ戻る
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 5. BATTLE SCREEN ===== -->
+      <div id="screen-battle" class="screen screen--hidden">
+        <div class="battle-container">
+          <h2 class="screen-title">戦闘</h2>
+
+          <!-- Enemy Section -->
+          <div class="battle-section battle-section--enemy">
+            <div id="battle-enemy-card" class="card card--enemy">
+              <h3 id="battle-enemy-name" class="card-title">スライム</h3>
+              <div class="hpbar" id="hpbar-enemy">
+                <div class="hpbar-fill"></div>
+              </div>
+              <div id="battle-enemy-hp" class="card-hp">50/50</div>
+            </div>
+          </div>
+
+          <!-- Message Window -->
+          <div id="battle-message" class="message-window">
+            敵が現れた！
+          </div>
+
+          <!-- Party Section -->
+          <div class="battle-section battle-section--party">
+            <div id="battle-party" class="party-cards">
+              <div id="battle-char-A" class="card card--character">
+                <span class="card-name">キャラA</span>
+                <div class="hpbar" id="hpbar-battle-A">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="battle-char-B" class="card card--character">
+                <span class="card-name">キャラB</span>
+                <div class="hpbar" id="hpbar-battle-B">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="battle-char-C" class="card card--character">
+                <span class="card-name">キャラC</span>
+                <div class="hpbar" id="hpbar-battle-C">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">30/30</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commands Section -->
+          <div class="battle-commands">
+            <button id="btn-battle-attack" class="btn btn--primary btn--command">
+              戦う
+            </button>
+            <button id="btn-battle-defend" class="btn btn--primary btn--command">
+              防御
+            </button>
+            <button id="btn-battle-items" class="btn btn--primary btn--command">
+              アイテム
+            </button>
+            <button id="btn-battle-escape" class="btn btn--primary btn--command">
+              逃げる
+            </button>
+          </div>
+        </div>
+
+        <!-- Items Window (Overlay) -->
+        <div id="battle-items-window" class="window window--items window--hidden">
+          <h3 class="window-title">アイテム</h3>
+          <div id="battle-items-list" class="items-list">
+            <!-- Items will be populated here -->
+          </div>
+          <button id="btn-battle-items-close" class="btn btn--secondary btn--block">
+            閉じる
+          </button>
+        </div>
+
+        <!-- Escape Confirmation (Overlay) -->
+        <div id="battle-escape-dialog" class="window window--dialog window--hidden">
+          <h3 class="window-title">確認</h3>
+          <p class="dialog-message">本当に逃げますか？</p>
+          <div class="dialog-buttons">
+            <button id="btn-escape-confirm" class="btn btn--primary">逃げる</button>
+            <button id="btn-escape-cancel" class="btn btn--secondary">キャンセル</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 6. UPGRADE SCREEN ===== -->
+      <div id="screen-upgrade" class="screen screen--hidden">
+        <div class="upgrade-container">
+          <h2 class="screen-title">装備強化</h2>
+
+          <!-- Character Selection -->
+          <div class="upgrade-characters">
+            <div id="upgrade-char-A" class="card card--character card--upgrade-select" data-char-id="A">
+              <span class="card-name">キャラA</span>
+              <p class="card-role">HP: 20 / 攻撃: 25 / 防御: 25</p>
+              <div class="enhance-stars" id="enhance-stars-A">
+                ★
+              </div>
+            </div>
+            <div id="upgrade-char-B" class="card card--character card--upgrade-select" data-char-id="B">
+              <span class="card-name">キャラB</span>
+              <p class="card-role">HP: 20 / 攻撃: 30 / 防御: 10</p>
+              <div class="enhance-stars" id="enhance-stars-B">
+                ★
+              </div>
+            </div>
+            <div id="upgrade-char-C" class="card card--character card--upgrade-select" data-char-id="C">
+              <span class="card-name">キャラC</span>
+              <p class="card-role">HP: 30 / 攻撃: 5 / 防御: 25</p>
+              <div class="enhance-stars" id="enhance-stars-C">
+                ★
+              </div>
+            </div>
+          </div>
+
+          <!-- Upgrade Details -->
+          <div id="upgrade-details" class="upgrade-details">
+            <div class="upgrade-info">
+              <h3>強化ボーナス（次レベル）</h3>
+              <div id="upgrade-bonus" class="upgrade-bonus">
+                <!-- Bonus details will be shown here -->
+              </div>
+            </div>
+
+            <div class="upgrade-cost">
+              <div class="upgrade-cost-display">
+                <span>必要コイン:</span>
+                <span id="upgrade-cost-required">15</span>
+              </div>
+              <div class="upgrade-cost-display">
+                <span>所持コイン:</span>
+                <span id="upgrade-cost-have">100</span>
+              </div>
+            </div>
+
+            <button id="btn-upgrade-perform" class="btn btn--primary btn--large">
+              強化する
+            </button>
+            <div id="upgrade-message" class="upgrade-message"></div>
+          </div>
+
+          <button id="btn-upgrade-back" class="btn btn--secondary">戻る</button>
+        </div>
+      </div>
+
+      <!-- ===== 7. ITEMS WINDOW (Shared) ===== -->
+      <div id="screen-items" class="screen screen--hidden">
+        <div class="window window--items window--full">
+          <h3 class="window-title">アイテム</h3>
+          <div id="items-list" class="items-list">
+            <!-- Items will be populated here -->
+          </div>
+          <button id="btn-items-close" class="btn btn--secondary btn--block">
+            閉じる
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== 8. SETTINGS SCREEN ===== -->
+      <div id="screen-settings" class="screen screen--hidden">
+        <div class="settings-container">
+          <h2 class="screen-title">設定</h2>
+
+          <div class="settings-content">
+            <!-- Sound Settings -->
+            <div class="settings-section">
+              <h3 class="settings-label">BGM音量</h3>
+              <div class="settings-control">
+                <input id="setting-bgm-volume" type="range" min="0" max="100" value="70" class="slider">
+                <span id="setting-bgm-value">70</span>%
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3 class="settings-label">SE音量</h3>
+              <div class="settings-control">
+                <input id="setting-se-volume" type="range" min="0" max="100" value="70" class="slider">
+                <span id="setting-se-value">70</span>%
+              </div>
+            </div>
+
+            <!-- Mute Settings -->
+            <div class="settings-section">
+              <h3 class="settings-label">ミュート</h3>
+              <label class="checkbox-label">
+                <input id="setting-mute" type="checkbox" class="checkbox">
+                <span>ミュート</span>
+              </label>
+            </div>
+
+            <!-- Fullscreen Settings -->
+            <div class="settings-section">
+              <h3 class="settings-label">フルスクリーン</h3>
+              <label class="toggle-label">
+                <input id="setting-fullscreen" type="checkbox" class="toggle-switch">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <!-- Text Speed Settings -->
+            <div class="settings-section">
+              <h3 class="settings-label">テキスト速度</h3>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input name="text-speed" value="fast" type="radio" class="radio">
+                  <span>早い</span>
+                </label>
+                <label class="radio-label">
+                  <input name="text-speed" value="normal" type="radio" class="radio" checked>
+                  <span>普通</span>
+                </label>
+                <label class="radio-label">
+                  <input name="text-speed" value="slow" type="radio" class="radio">
+                  <span>遅い</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Performance Settings -->
+            <div class="settings-section">
+              <h3 class="settings-label">パフォーマンス</h3>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input name="performance" value="high" type="radio" class="radio" checked>
+                  <span>高</span>
+                </label>
+                <label class="radio-label">
+                  <input name="performance" value="low" type="radio" class="radio">
+                  <span>低 (動作が不安定な場合)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-settings-back" class="btn btn--secondary">戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Placeholder for Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Placeholder for Confirmation Dialogs -->
+  <div id="dialog-container" class="dialog-container"></div>
+
+  <!-- Scripts (Load order is important) -->
+  <script src="./js/data.js"></script>
+  <script src="./js/state.js"></script>
+  <script src="./js/map.js"></script>
+  <script src="./js/explore.js"></script>
+  <script src="./js/save.js"></script>
+  <script src="./js/item.js"></script>
+  <script src="./js/battle.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
