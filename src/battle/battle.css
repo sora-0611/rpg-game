@@ -190,7 +190,7 @@ button {
   grid-column: 1 / 4;
   display: flex;
   gap: 8px;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: center;
 }
 
