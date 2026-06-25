@@ -369,6 +369,17 @@
     dom.fleeWindow.hidden = true;
     dom.menuWindow.hidden = true;
     dom.titleConfirmScrim.hidden = true;
+    dom.menuButton.hidden = false;
+  }
+
+  function openMenuWindow() {
+    dom.menuWindow.hidden = false;
+    dom.menuButton.hidden = true;
+  }
+
+  function closeMenuWindow() {
+    dom.menuWindow.hidden = true;
+    dom.menuButton.hidden = false;
   }
 
   function showToast(message) {
@@ -469,12 +480,8 @@
   dom.fleeNoButton.addEventListener("click", handleFleeNo);
   dom.fleeCloseButton.addEventListener("click", closeFleeWindow);
 
-  dom.menuButton.addEventListener("click", () => {
-    dom.menuWindow.hidden = false;
-  });
-  dom.menuCloseButton.addEventListener("click", () => {
-    dom.menuWindow.hidden = true;
-  });
+  dom.menuButton.addEventListener("click", openMenuWindow);
+  dom.menuCloseButton.addEventListener("click", closeMenuWindow);
   dom.menuTitleButton.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = false;
   });
@@ -483,7 +490,7 @@
   });
   dom.titleConfirmYes.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = true;
-    dom.menuWindow.hidden = true;
+    closeMenuWindow();
     showToast("タイトル画面へ戻りました（デモ）。");
   });
   dom.titleConfirmNo.addEventListener("click", () => {

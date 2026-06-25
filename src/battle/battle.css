@@ -193,13 +193,12 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 10px;
   height: 100%;
 }
 
 .player-hp-block {
-  margin-top: 56px;
   min-width: 240px;
 }
 
