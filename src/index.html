@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPG GAME</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/loading.css" />
+  <link rel="stylesheet" href="./css/title.css" />
+</head>
+<body>
+  <div id="app" class="game-container">
+    <section id="screen-loading" class="screen">
+      <p class="loading-text">Now loading...</p>
+    </section>
+
+    <section id="screen-title" class="screen" hidden>
+      <h1 class="game-title">ゲームタイトル</h1>
+      <nav class="title-menu">
+        <button id="btn-start" class="btn btn-primary" type="button">はじめから</button>
+        <button id="btn-continue" class="btn btn-primary" type="button" hidden>つづきから</button>
+        <button id="btn-settings" class="btn btn-secondary" type="button">設定</button>
+      </nav>
+    </section>
+  </div>
+
+  <div id="rotate-warning" role="alert">画面を横向きにしてください</div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
