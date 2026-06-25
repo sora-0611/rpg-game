@@ -21,9 +21,11 @@
     enemyStatsLine: document.getElementById("enemy-stats-line"),
     enemyHpFill: document.getElementById("enemy-hp-fill"),
     enemyHpValue: document.getElementById("enemy-hp-value"),
-    partyStatusList: document.getElementById("party-status-list"),
     playerAvatar: document.getElementById("player-avatar"),
     playerName: document.getElementById("player-name"),
+    playerStatsLine: document.getElementById("player-stats-line"),
+    playerHpFill: document.getElementById("player-hp-fill"),
+    playerHpValue: document.getElementById("player-hp-value"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
     btnDefend: document.getElementById("btn-defend"),
@@ -380,7 +382,6 @@
   // ---------- 描画 ----------
   function renderAll() {
     renderEnemy();
-    renderParty();
     renderActiveCharacterBox();
     renderCommands();
   }
@@ -410,36 +411,6 @@
     setHpBar(dom.enemyHpFill, dom.enemyHpValue, enemy.hpCurrent, enemy.hpMax);
   }
 
-  function renderParty() {
-    dom.partyStatusList.innerHTML = "";
-    state.characters.forEach((c, index) => {
-      const card = document.createElement("div");
-      card.className = "status-card";
-      if (c.hpCurrent <= 0) card.classList.add("is-ko");
-      if (index === state.actingIndex && state.phase === "PLAYER_TURN") card.classList.add("is-active");
-
-      const nameRow = document.createElement("div");
-      nameRow.className = "status-card-name";
-      const stars = "★".repeat(c.enhanceLevel);
-      nameRow.innerHTML = `<span>${c.name}${c.hpCurrent <= 0 ? "（戦闘不能）" : ""}</span><span class="status-card-stars">${stars}</span>`;
-      card.appendChild(nameRow);
-
-      const hpRow = document.createElement("div");
-      hpRow.className = "hp-block-row";
-      hpRow.innerHTML = `<span class="hp-label">HP</span><div class="hp-bar"><div class="hp-bar-fill"></div></div>`;
-      card.appendChild(hpRow);
-      const fill = hpRow.querySelector(".hp-bar-fill");
-      setHpBar(fill, null, c.hpCurrent, c.hpMax);
-
-      const statsRow = document.createElement("div");
-      statsRow.className = "status-card-stats";
-      statsRow.innerHTML = `<span>HP ${Math.max(0, c.hpCurrent)}/${c.hpMax}</span><span>攻撃 ${c.attack}</span><span>防御 ${c.defense}</span>`;
-      card.appendChild(statsRow);
-
-      dom.partyStatusList.appendChild(card);
-    });
-  }
-
   // ワイヤーフレームの「プレイヤー」枠は、行動中（または先頭の生存中）キャラクターを表示する
   function renderActiveCharacterBox() {
     const displayCharacter = state.phase === "PLAYER_TURN"
@@ -447,6 +418,8 @@
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
     dom.playerAvatar.textContent = displayCharacter.name.charAt(displayCharacter.name.length - 1);
+    dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack}　防御 ${displayCharacter.defense}`;
+    setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
   function renderCommands() {

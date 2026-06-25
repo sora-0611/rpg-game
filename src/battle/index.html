@@ -12,6 +12,12 @@
 
   <!-- 敵関連: 敵イメージ、HP関連 -->
   <section class="enemy-area">
+    <div class="enemy-box" id="enemy-box">
+      <div class="avatar-placeholder" id="enemy-avatar">敵</div>
+      <div class="enemy-name" id="enemy-name">敵</div>
+      <div class="enemy-rank-tag" id="enemy-rank-tag"></div>
+      <div class="enemy-stats-line" id="enemy-stats-line"></div>
+    </div>
     <div class="hp-block">
       <div class="hp-block-row">
         <span class="hp-label">HP</span>
@@ -19,22 +25,23 @@
       </div>
       <span class="hp-value" id="enemy-hp-value"></span>
     </div>
-    <div class="enemy-box" id="enemy-box">
-      <div class="avatar-placeholder" id="enemy-avatar">敵</div>
-      <div class="enemy-name" id="enemy-name">敵</div>
-      <div class="enemy-rank-tag" id="enemy-rank-tag"></div>
-      <div class="enemy-stats-line" id="enemy-stats-line"></div>
-    </div>
   </section>
 
-  <!-- 味方関連: キャラクター3人のステータスカード -->
-  <section class="party-status-list" id="party-status-list"></section>
-
-  <!-- プレイヤー関連: 行動中キャラクターのイメージ表示（HPはパーティーステータスカードに統合） -->
+  <!-- プレイヤー関連: 行動中キャラクターのHP（ワイヤーフレーム通り別枠）とイメージ表示 -->
   <section class="player-area">
+    <div class="hp-block player-hp-block">
+      <div class="hp-block-row">
+        <span class="hp-label">HP</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="player-hp-fill"></div></div>
+      </div>
+      <span class="hp-value" id="player-hp-value"></span>
+    </div>
     <div class="player-box" id="player-box">
       <div class="avatar-placeholder" id="player-avatar"></div>
-      <div class="player-name" id="player-name"></div>
+      <div class="player-info">
+        <div class="player-name" id="player-name"></div>
+        <div class="player-stats-line" id="player-stats-line"></div>
+      </div>
     </div>
   </section>
 
