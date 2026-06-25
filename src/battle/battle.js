@@ -24,8 +24,6 @@
     partyStatusList: document.getElementById("party-status-list"),
     playerAvatar: document.getElementById("player-avatar"),
     playerName: document.getElementById("player-name"),
-    playerHpFill: document.getElementById("player-hp-fill"),
-    playerHpValue: document.getElementById("player-hp-value"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
     btnDefend: document.getElementById("btn-defend"),
@@ -449,7 +447,6 @@
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
     dom.playerAvatar.textContent = displayCharacter.name.charAt(displayCharacter.name.length - 1);
-    setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
   function renderCommands() {
