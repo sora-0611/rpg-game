@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG Game Prototype</title>
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/screens.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <div id="main" class="app-main">
+      <!-- ===== 1. MAP SELECT SCREEN ===== -->
+      <div id="screen-maps" class="screen screen--hidden">
+        <div class="maps-container">
+          <h2 class="screen-title">マップ選択</h2>
+          <div class="maps-grid">
+            <div id="map-card-1" class="card card--map" data-map-id="1">
+              <h3 class="card-title">(仮)難易度1マップ</h3>
+              <p class="card-description">難易度: 簡単</p>
+              <button id="btn-map-select-1" class="btn btn--secondary btn--small" data-map-id="1">
+                選択
+              </button>
+              <div id="map-status-1" class="map-status"></div>
+            </div>
+            <div id="map-card-2" class="card card--map" data-map-id="2">
+              <h3 class="card-title">(仮)難易度2マップ</h3>
+              <p class="card-description">難易度: 普通</p>
+              <button id="btn-map-select-2" class="btn btn--secondary btn--small btn--disabled" data-map-id="2">
+                選択
+              </button>
+              <div id="map-status-2" class="map-status">クリアで開放</div>
+            </div>
+            <div id="map-card-3" class="card card--map" data-map-id="3">
+              <h3 class="card-title">(仮)難易度3マップ</h3>
+              <p class="card-description">難易度: 難しい</p>
+              <button id="btn-map-select-3" class="btn btn--secondary btn--small btn--disabled" data-map-id="3">
+                選択
+              </button>
+              <div id="map-status-3" class="map-status">クリアで開放</div>
+            </div>
+          </div>
+          <button id="btn-map-back" class="btn btn--secondary maps-back-button">戻る</button>
+        </div>
+      </div>
+
+      <!-- ===== 2. EXPLORE SCREEN ===== -->
+      <div id="screen-explore" class="screen screen--hidden">
+        <div class="explore-container">
+          <!-- Top Bar -->
+          <div class="explore-topbar">
+            <span id="explore-coin" class="explore-coin-display">コイン: 0</span>
+            <button id="btn-explore-menu" class="btn btn--icon">
+              ☰
+            </button>
+          </div>
+
+          <!-- Map Canvas Area -->
+          <div id="explore-map" class="explore-map">
+            <canvas id="canvas-map" width="400" height="400"></canvas>
+          </div>
+
+          <!-- Character Status Panel -->
+          <div class="explore-status-panel">
+            <h3>パーティー</h3>
+            <div id="explore-party" class="party-cards">
+              <div id="status-char-A" class="card card--character card--status-small">
+                <span class="card-name">キャラA</span>
+                <div class="hpbar" id="hpbar-explore-A">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="status-char-B" class="card card--character card--status-small">
+                <span class="card-name">キャラB</span>
+                <div class="hpbar" id="hpbar-explore-B">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">20/20</span>
+              </div>
+              <div id="status-char-C" class="card card--character card--status-small">
+                <span class="card-name">キャラC</span>
+                <div class="hpbar" id="hpbar-explore-C">
+                  <div class="hpbar-fill"></div>
+                </div>
+                <span class="card-hp">30/30</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Window -->
+          <div id="explore-message" class="message-window">
+            ゲーム開始。移動してください。
+          </div>
+        </div>
+
+        <!-- Hamburger Menu (hidden by default) -->
+        <div id="explore-menu" class="window window--menu window--hidden">
+          <h3 class="window-title">メニュー</h3>
+          <div class="menu-content">
+            <div class="menu-coin-display">
+              コイン: <span id="menu-coin">0</span>
+            </div>
+            <button id="btn-menu-maps" class="btn btn--secondary btn--block">
+              マップ選択
+            </button>
+            <button id="btn-menu-upgrade" class="btn btn--secondary btn--block">
+              強化
+            </button>
+            <button id="btn-menu-items" class="btn btn--secondary btn--block">
+              アイテム
+            </button>
+            <button id="btn-menu-settings" class="btn btn--secondary btn--block">
+              設定
+            </button>
+            <button id="btn-menu-title" class="btn btn--danger btn--block">
+              タイトルへ戻る
+            </button>
+            <button id="btn-menu-close" class="btn btn--secondary btn--block">
+              閉じる
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- Placeholder for Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Placeholder for Confirmation Dialogs -->
+  <div id="dialog-container" class="dialog-container"></div>
+
+  <!-- Scripts (Load order is important) -->
+  <script src="./js/data.js"></script>
+  <script src="./js/state.js"></script>
+  <script src="./js/map.js"></script>
+  <script src="./js/explore.js"></script>
+  <script src="./js/save.js"></script>
+  <script src="./js/item.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
