@@ -5,8 +5,6 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
-  LOADING: 'screen-loading',
-  TITLE: 'screen-title',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
 };
@@ -184,19 +182,6 @@ function updatePartyStatus(gameState, context = 'explore') {
 // ===== SCREEN RENDER FUNCTIONS =====
 
 /**
- * タイトル画面をレンダリング
- * @param {Object} gameState
- */
-function renderTitleScreen(gameState) {
-  const continueBtn = document.getElementById('btn-title-continue');
-  const hasSave = typeof SAVE !== 'undefined' && SAVE.hasSavedGame();
-  if (continueBtn) {
-    continueBtn.disabled = !hasSave;
-    continueBtn.classList.toggle('btn--disabled', !hasSave);
-  }
-}
-
-/**
  * マップ選択画面をレンダリング
  * @param {Object} gameState
  */
@@ -346,9 +331,6 @@ function renderExploreScreen(gameState) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
-    case 'TITLE':
-      renderTitleScreen(gameState);
-      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -363,33 +345,6 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
-  // タイトル画面ボタン
-  const btnNewGame = document.getElementById('btn-title-newgame');
-  if (btnNewGame) {
-    btnNewGame.addEventListener('click', () => {
-      window.switchScene('MAP_SELECT');
-    });
-  }
-
-  const btnContinue = document.getElementById('btn-title-continue');
-  if (btnContinue) {
-    btnContinue.addEventListener('click', () => {
-      if (typeof SAVE !== 'undefined' && SAVE.hasSavedGame()) {
-        const savedState = SAVE.loadSavedGameState();
-        if (savedState) {
-          if (typeof window.setGameState === 'function') {
-            window.setGameState(savedState);
-          } else {
-            window.gameState = savedState;
-          }
-          window.switchScene('MAP_SELECT');
-          return;
-        }
-      }
-      showToast('セーブデータが見つかりません。', 'error');
-    });
-  }
-
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -406,7 +361,7 @@ function initializeUI() {
   const btnMapBack = document.getElementById('btn-map-back');
   if (btnMapBack) {
     btnMapBack.addEventListener('click', () => {
-      window.switchScene('TITLE');
+      window.switchScene('EXPLORE');
     });
   }
 
@@ -424,6 +379,13 @@ function initializeUI() {
     btnMenuMaps.addEventListener('click', () => {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
       window.switchScene('MAP_SELECT');
+    });
+  }
+
+  const btnMenuClose = document.getElementById('btn-menu-close');
+  if (btnMenuClose && exploreMenu) {
+    btnMenuClose.addEventListener('click', () => {
+      exploreMenu.classList.add('window--hidden');
     });
   }
 
@@ -534,7 +496,6 @@ if (typeof window !== 'undefined') {
     showConfirmDialog,
     updatePartyStatus,
     renderScreen,
-    renderTitleScreen,
     renderMapSelectScreen,
     renderExploreScreen,
     initializeUI,

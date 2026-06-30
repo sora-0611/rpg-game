@@ -120,7 +120,7 @@ function createNewGameState() {
 
   return {
     // ゲーム全体
-    scene: 'TITLE',
+    scene: 'MAP_SELECT',
     version: DATA.CONSTANTS.SAVE_VERSION,
     playTime: 0,
     isLoaded: false,

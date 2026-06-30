@@ -84,6 +84,7 @@
 
 /* ===== MAP SELECT SCREEN ===== */
 .maps-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 90%;
@@ -94,6 +95,13 @@
   background-color: var(--color-bg-surface);
   border-radius: var(--radius-lg);
   overflow-y: auto;
+}
+
+.maps-back-button {
+  position: absolute;
+  top: var(--space-lg);
+  left: var(--space-lg);
+  z-index: 10;
 }
 
 .maps-grid {

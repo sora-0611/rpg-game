@@ -11,30 +11,7 @@
 <body>
   <div id="app" class="app">
     <div id="main" class="app-main">
-      <!-- ===== 1. LOADING SCREEN ===== -->
-      <div id="screen-loading" class="screen">
-        <div class="loading-container">
-          <h1 class="loading-title">Now loading...</h1>
-          <div class="loading-spinner"></div>
-        </div>
-      </div>
-
-      <!-- ===== 2. TITLE SCREEN ===== -->
-      <div id="screen-title" class="screen screen--hidden">
-        <div class="title-container">
-          <h1 class="title-heading">RPG Game</h1>
-          <div class="title-buttons">
-            <button id="btn-title-newgame" class="btn btn--primary btn--large">
-              はじめから
-            </button>
-            <button id="btn-title-continue" class="btn btn--primary btn--large">
-              つづきから
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== 3. MAP SELECT SCREEN ===== -->
+      <!-- ===== 1. MAP SELECT SCREEN ===== -->
       <div id="screen-maps" class="screen screen--hidden">
         <div class="maps-container">
           <h2 class="screen-title">マップ選択</h2>
@@ -64,11 +41,11 @@
               <div id="map-status-3" class="map-status">クリアで開放</div>
             </div>
           </div>
-          <button id="btn-map-back" class="btn btn--secondary">戻る</button>
+          <button id="btn-map-back" class="btn btn--secondary maps-back-button">戻る</button>
         </div>
       </div>
 
-      <!-- ===== 4. EXPLORE SCREEN ===== -->
+      <!-- ===== 2. EXPLORE SCREEN ===== -->
       <div id="screen-explore" class="screen screen--hidden">
         <div class="explore-container">
           <!-- Top Bar -->
@@ -126,7 +103,7 @@
               コイン: <span id="menu-coin">0</span>
             </div>
             <button id="btn-menu-maps" class="btn btn--secondary btn--block">
-              マップ変更
+              マップ選択
             </button>
             <button id="btn-menu-upgrade" class="btn btn--secondary btn--block">
               強化
@@ -139,6 +116,9 @@
             </button>
             <button id="btn-menu-title" class="btn btn--danger btn--block">
               タイトルへ戻る
+            </button>
+            <button id="btn-menu-close" class="btn btn--secondary btn--block">
+              閉じる
             </button>
           </div>
         </div>

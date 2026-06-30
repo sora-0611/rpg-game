@@ -26,16 +26,9 @@ function initializeGame() {
   // UIを初期化
   UI.initializeUI();
 
-  // ローディング画面を表示
+  // マップ選択画面をそのまま表示
   UI.hideAllScreens();
-  UI.showScreen('screen-loading');
-
-  // 次のフレーム以降にタイトル画面へ遷移
-  window.requestAnimationFrame(() => {
-    window.setTimeout(() => {
-      switchScene('TITLE');
-    }, 500);
-  });
+  switchScene('MAP_SELECT');
 }
 
 /**
@@ -75,7 +68,7 @@ function switchScene(newSceneName) {
  * ui.jsから参照されるので定義を統一
  */
 const SCENE_TO_SCREEN = {
-  TITLE: 'screen-title',
+  TITLE: 'screen-maps',
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
 };
