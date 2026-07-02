@@ -7,6 +7,7 @@
 const SCREEN_MAP = {
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
+  UPGRADE: 'screen-upgrade',
 };
 
 // ===== UTILITY FUNCTIONS =====
@@ -325,6 +326,92 @@ function renderExploreScreen(gameState) {
 }
 
 /**
+ * 強化画面をレンダリング
+ * @param {Object} gameState
+ */
+function renderUpgradeScreen(gameState) {
+  setText('upgrade-coin', gameState.player.coin);
+
+  const container = document.getElementById('upgrade-party');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  gameState.party.forEach((char, idx) => {
+    const charData = DATA.CHARACTERS[char.characterId];
+    const isMaxLevel = char.enhanceLevel >= DATA.CONSTANTS.MAX_ENHANCE_LEVEL;
+    const { canUpgrade } = STATE.canUpgradeCharacter(gameState, idx);
+
+    let nextLevelHTML = '';
+    let btnDisabled = canUpgrade ? '' : 'disabled';
+    let btnText = '強化する';
+
+    if (isMaxLevel) {
+      btnText = '最大レベル';
+      btnDisabled = 'disabled';
+      nextLevelHTML = `<div class="upgrade-next-level upgrade-next-level--max">最大レベルに達しています</div>`;
+    } else {
+      const nextLevel = char.enhanceLevel + 1;
+      const cost = DATA.ENHANCE_COSTS[char.characterId][nextLevel];
+      nextLevelHTML = `
+        <div class="upgrade-next-level">
+          <span class="upgrade-cost">強化コスト: ${cost.coin} コイン</span>
+          <span class="upgrade-bonus">HP +${cost.hpBonus} / ATK +${cost.attackBonus} / DEF +${cost.defenseBonus}</span>
+        </div>
+      `;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card card--character upgrade-char-card';
+    card.innerHTML = `
+      <div class="upgrade-char-header">
+        <span class="card-name">${charData.name}</span>
+        <span class="upgrade-level">Lv.${char.enhanceLevel}</span>
+      </div>
+      <div class="upgrade-stats">
+        <span>HP: ${char.hpMax}</span>
+        <span>ATK: ${char.attack}</span>
+        <span>DEF: ${char.defense}</span>
+      </div>
+      ${nextLevelHTML}
+      <button class="btn btn--primary btn--small btn-upgrade-char"
+              data-char-index="${idx}" ${btnDisabled}>
+        ${btnText}
+      </button>
+    `;
+    container.appendChild(card);
+  });
+
+  container.querySelectorAll('.btn-upgrade-char').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleUpgradeCharacter(parseInt(btn.dataset.charIndex, 10));
+    });
+  });
+}
+
+/**
+ * キャラクター強化を実行
+ * @param {number} charIndex
+ */
+function handleUpgradeCharacter(charIndex) {
+  const gameState = window.gameState;
+  if (!gameState) return;
+
+  const { canUpgrade, reason } = STATE.canUpgradeCharacter(gameState, charIndex);
+  if (!canUpgrade) {
+    showToast(reason, 'error');
+    return;
+  }
+
+  const success = STATE.upgradeCharacter(gameState, charIndex);
+  if (success) {
+    const charName = DATA.CHARACTERS[gameState.party[charIndex].characterId].name;
+    showToast(`${charName}を強化しました！`, 'success');
+    renderUpgradeScreen(gameState);
+  }
+}
+
+/**
  * シーンに対応する画面をレンダリング
  * @param {string} sceneName
  * @param {Object} gameState
@@ -336,6 +423,9 @@ function renderScreen(sceneName, gameState) {
       break;
     case 'EXPLORE':
       renderExploreScreen(gameState);
+      break;
+    case 'UPGRADE':
+      renderUpgradeScreen(gameState);
       break;
   }
 }
@@ -386,6 +476,21 @@ function initializeUI() {
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
       exploreMenu.classList.add('window--hidden');
+    });
+  }
+
+  const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
+  if (btnMenuUpgrade) {
+    btnMenuUpgrade.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('UPGRADE');
+    });
+  }
+
+  const btnUpgradeBack = document.getElementById('btn-upgrade-back');
+  if (btnUpgradeBack) {
+    btnUpgradeBack.addEventListener('click', () => {
+      window.switchScene('EXPLORE');
     });
   }
 
@@ -498,6 +603,8 @@ if (typeof window !== 'undefined') {
     renderScreen,
     renderMapSelectScreen,
     renderExploreScreen,
+    renderUpgradeScreen,
+    handleUpgradeCharacter,
     initializeUI,
     handleExploreMove,
   };
