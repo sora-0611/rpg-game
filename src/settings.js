@@ -8,6 +8,62 @@ const DEFAULT_SETTINGS = {
 const gameSettings = { ...DEFAULT_SETTINGS };
 window.gameSettings = gameSettings;
 
+const bgmAudio = document.getElementById('bgm-audio');
+const seAudio = document.getElementById('se-audio');
+let isBgmPlaybackStarted = false;
+let isSePlaybackStarted = false;
+
+function updateBgmVolume(value) {
+    const nextVolume = Number(value);
+    gameSettings.bgmVolume = nextVolume;
+
+    if (!bgmAudio) {
+        return;
+    }
+
+    bgmAudio.volume = nextVolume / 100;
+
+    if (isBgmPlaybackStarted) {
+        return;
+    }
+
+    try {
+        bgmAudio.play().then(() => {
+            isBgmPlaybackStarted = true;
+        }).catch((error) => {
+            console.error('BGMの再生に失敗しました:', error);
+        });
+    } catch (error) {
+        console.error('BGMの再生に失敗しました:', error);
+    }
+}
+
+function updateSeVolume(value) {
+    const nextVolume = Number(value);
+    gameSettings.seVolume = nextVolume;
+
+    if (!seAudio) {
+        return;
+    }
+
+    seAudio.volume = nextVolume / 100;
+
+    if (isSePlaybackStarted) {
+        return;
+    }
+
+    try {
+        seAudio.currentTime = 0;
+        seAudio.play().then(() => {
+            isSePlaybackStarted = true;
+        }).catch((error) => {
+            console.error('SEの再生に失敗しました:', error);
+        });
+    } catch (error) {
+        console.error('SEの再生に失敗しました:', error);
+    }
+}
+
 // スライダーの値をリアルタイムで更新
 function updateSliderFill(slider) {
     const sliderContainer = slider.closest('.slider-container');
@@ -41,7 +97,19 @@ document.querySelectorAll('.slider').forEach(slider => {
     // 入力時に更新
     slider.addEventListener('input', function() {
         updateSliderFill(this);
+
+        if (this.id === 'bgm-volume') {
+            updateBgmVolume(this.value);
+        } else if (this.id === 'se-volume') {
+            updateSeVolume(this.value);
+        }
     });
+
+    if (slider.id === 'bgm-volume') {
+        updateBgmVolume(slider.value);
+    } else if (slider.id === 'se-volume') {
+        updateSeVolume(slider.value);
+    }
 });
 
 // ラジオボタンのキーボード操作対応
@@ -122,6 +190,7 @@ document.querySelectorAll('.mute-button').forEach(button => {
         
         // スライダーのフィルバーを更新
         updateSliderFill(slider);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
     });
 });
 
