@@ -167,7 +167,7 @@
 
   // 被ダメージ計算（防御中は半減）。バランス仕様書に計算式の定義はないため、簡易な攻撃力-防御力方式を採用する
   function applyEnemyDamage(enemy, target) {
-    let damage = Math.max(1, enemy.attack - target.defense);
+    let damage = Math.max(0, enemy.attack - target.defense);
     if (target.isDefending) {
       damage = Math.ceil(damage / 2);
     }
@@ -180,7 +180,7 @@
     if (state.phase !== "PLAYER_TURN") return;
     try {
       const attacker = getActingCharacter();
-      const damage = Math.max(1, attacker.attack - state.enemy.defense);
+      const damage = Math.max(0, attacker.attack - state.enemy.defense);
       state.enemy.hpCurrent = Math.max(0, state.enemy.hpCurrent - damage);
       logMessage(`${attacker.name}の攻撃！${state.enemy.name}に${damage}のダメージを与えた。`);
       renderAll();
