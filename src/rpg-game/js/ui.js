@@ -5,6 +5,7 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
+  SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
   BATTLE: 'screen-battle',
@@ -342,6 +343,8 @@ function renderExploreScreen(gameState) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
+    case 'SETTINGS':
+      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -359,6 +362,20 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
+  // 設定画面の戻るボタン
+  const btnSettingsBack = document.getElementById('btn-settings-back');
+  if (btnSettingsBack) {
+    btnSettingsBack.addEventListener('click', () => {
+      const lastScene = window.gameState?.lastScene || 'EXPLORE';
+      window.switchScene(lastScene);
+    });
+  }
+
+  // 設定JS初期化
+  if (window.SETTINGS) {
+    window.SETTINGS.initialize();
+  }
+
   // 戦闘UIの初期化
   bindBattleControls();
 
@@ -403,6 +420,25 @@ function initializeUI() {
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
       exploreMenu.classList.add('window--hidden');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('SETTINGS');
+    });
+  }
+
+  const btnMenuTitle = document.getElementById('btn-menu-title');
+  if (btnMenuTitle) {
+    btnMenuTitle.addEventListener('click', async () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
+      if (confirmed) {
+        window.location.href = '../index.html';
+      }
     });
   }
 
