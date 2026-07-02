@@ -134,9 +134,11 @@ if (backButton) {
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
         let targetPage = 'index.html';
 
-        if (referrerPage === 'tansaku.html') {// もし前のページが「tansaku.html」なら、戻る先を「tansaku.html」に設定
+        if (referrerPage === 'tansaku.html') {
             targetPage = 'tansaku.html';
-        } else if (referrerPage === 'index.html') {// もし前のページが「index.html」なら、戻る先を「index.html」に設定
+        } else if (referrerUrl && referrerUrl.pathname.includes('rpg-game')) {
+            targetPage = './rpg-game/index.html';
+        } else if (referrerPage === 'index.html') {
             targetPage = 'index.html';
         }
 

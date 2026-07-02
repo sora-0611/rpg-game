@@ -5,7 +5,6 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
-  TITLE: 'screen-title',
   SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
@@ -333,8 +332,6 @@ function renderExploreScreen(gameState) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
-    case 'TITLE':
-      break;
     case 'SETTINGS':
       break;
     case 'MAP_SELECT':
@@ -351,26 +348,11 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
-  // タイトル画面ボタン
-  const btnTitleStart = document.getElementById('btn-title-start');
-  if (btnTitleStart) {
-    btnTitleStart.addEventListener('click', () => {
-      window.switchScene('MAP_SELECT');
-    });
-  }
-
-  const btnTitleSettings = document.getElementById('btn-title-settings');
-  if (btnTitleSettings) {
-    btnTitleSettings.addEventListener('click', () => {
-      window.switchScene('SETTINGS');
-    });
-  }
-
   // 設定画面の戻るボタン
   const btnSettingsBack = document.getElementById('btn-settings-back');
   if (btnSettingsBack) {
     btnSettingsBack.addEventListener('click', () => {
-      const lastScene = window.gameState?.lastScene || 'TITLE';
+      const lastScene = window.gameState?.lastScene || 'EXPLORE';
       window.switchScene(lastScene);
     });
   }
@@ -438,7 +420,7 @@ function initializeUI() {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
       const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
       if (confirmed) {
-        window.switchScene('TITLE');
+        window.location.href = '../index.html';
       }
     });
   }
