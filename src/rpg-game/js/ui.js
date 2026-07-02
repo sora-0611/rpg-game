@@ -5,6 +5,7 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
+  SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
   UPGRADE: 'screen-upgrade',
@@ -418,6 +419,8 @@ function handleUpgradeCharacter(charIndex) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
+    case 'SETTINGS':
+      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -435,6 +438,20 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
+  // 設定画面の戻るボタン
+  const btnSettingsBack = document.getElementById('btn-settings-back');
+  if (btnSettingsBack) {
+    btnSettingsBack.addEventListener('click', () => {
+      const lastScene = window.gameState?.lastScene || 'EXPLORE';
+      window.switchScene(lastScene);
+    });
+  }
+
+  // 設定JS初期化
+  if (window.SETTINGS) {
+    window.SETTINGS.initialize();
+  }
+
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -491,6 +508,25 @@ function initializeUI() {
   if (btnUpgradeBack) {
     btnUpgradeBack.addEventListener('click', () => {
       window.switchScene('EXPLORE');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('SETTINGS');
+    });
+  }
+
+  const btnMenuTitle = document.getElementById('btn-menu-title');
+  if (btnMenuTitle) {
+    btnMenuTitle.addEventListener('click', async () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
+      if (confirmed) {
+        window.location.href = '../index.html';
+      }
     });
   }
 
