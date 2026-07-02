@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>強化画面</title>
+    <link rel="stylesheet" href="enhancement.css">
+</head>
+<body>
+    <main class="enhance-page">
+        <header class="enhance-header">
+            <h1>強化画面</h1>
+            <button class="back-button" type="button">戻る</button>
+        </header>
+
+        <section class="coin-panel">
+            <span class="coin-label">コイン</span>
+            <div class="coin-count">
+                <span class="coin-icon">🪙</span>
+                <span id="coinValue">50</span>
+            </div>
+        </section>
+
+        <section class="card-grid" id="enhanceGrid" aria-label="強化対象一覧">
+            <!-- JavaScriptでカードを描画 -->
+        </section>
+    </main>
+
+    <script src="enhancement.js"></script>
+</body>
+</html>
