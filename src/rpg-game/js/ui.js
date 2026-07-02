@@ -354,10 +354,6 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
-<<<<<<< HEAD
-  // 戦闘UIの初期化
-  bindBattleControls();
-=======
   // 設定画面の戻るボタン
   const btnSettingsBack = document.getElementById('btn-settings-back');
   if (btnSettingsBack) {
@@ -371,7 +367,9 @@ function initializeUI() {
   if (window.SETTINGS) {
     window.SETTINGS.initialize();
   }
->>>>>>> main
+
+  // 戦闘UIの初期化
+  bindBattleControls();
 
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
