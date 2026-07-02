@@ -1,20 +1,14 @@
-import { showScreen } from './screenManager.js';
-import { initLoadingScreen } from './screens/loading.js';
-import { initTitleScreen } from './screens/title.js';
-
-window.addEventListener('title:start', () => {
+window.addEventListener('title:start', function () {
   window.location.href = './rpg-game/index.html';
 });
 
-window.addEventListener('title:continue', () => {
+window.addEventListener('title:continue', function () {
   window.location.href = './rpg-game/index.html';
 });
 
-window.addEventListener('title:settings', () => {
+window.addEventListener('title:settings', function () {
   window.location.href = './settings.html';
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  initTitleScreen();
-  initLoadingScreen({ onFinished: () => showScreen('title') });
-});
+RPG.initTitleScreen();
+RPG.initLoadingScreen({ onFinished: function () { RPG.showScreen('title'); } });

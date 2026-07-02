@@ -1,16 +1,5 @@
-const MIN_DISPLAY_MS = 400;
+var RPG = RPG || {};
 
-export function initLoadingScreen({ onFinished }) {
-  const start = performance.now();
-
-  const finish = () => {
-    const elapsed = performance.now() - start;
-    setTimeout(onFinished, Math.max(0, MIN_DISPLAY_MS - elapsed));
-  };
-
-  if (document.readyState === 'complete') {
-    finish();
-  } else {
-    window.addEventListener('load', finish, { once: true });
-  }
-}
+RPG.initLoadingScreen = function (options) {
+  setTimeout(options.onFinished, 400);
+};

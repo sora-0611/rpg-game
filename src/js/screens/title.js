@@ -1,23 +1,22 @@
-import { hasSaveData, isSaveDataValid, clearSaveData } from '../save.js';
+var RPG = RPG || {};
 
-const CORRUPT_SAVE_MESSAGE =
-  'セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？';
+RPG.initTitleScreen = function () {
+  var CORRUPT_MSG = 'セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？';
 
-export function initTitleScreen() {
-  const startBtn = document.getElementById('btn-start');
-  const continueBtn = document.getElementById('btn-continue');
-  const settingsBtn = document.getElementById('btn-settings');
+  var startBtn = document.getElementById('btn-start');
+  var continueBtn = document.getElementById('btn-continue');
+  var settingsBtn = document.getElementById('btn-settings');
 
-  continueBtn.hidden = !hasSaveData();
+  continueBtn.hidden = !RPG.Save.hasSaveData();
 
-  startBtn.addEventListener('click', () => {
+  startBtn.addEventListener('click', function () {
     window.dispatchEvent(new CustomEvent('title:start'));
   });
 
-  continueBtn.addEventListener('click', () => {
-    if (!isSaveDataValid()) {
-      if (window.confirm(CORRUPT_SAVE_MESSAGE)) {
-        clearSaveData();
+  continueBtn.addEventListener('click', function () {
+    if (!RPG.Save.isSaveDataValid()) {
+      if (window.confirm(CORRUPT_MSG)) {
+        RPG.Save.clearSaveData();
         window.dispatchEvent(new CustomEvent('title:start'));
       }
       return;
@@ -25,7 +24,7 @@ export function initTitleScreen() {
     window.dispatchEvent(new CustomEvent('title:continue'));
   });
 
-  settingsBtn.addEventListener('click', () => {
+  settingsBtn.addEventListener('click', function () {
     window.dispatchEvent(new CustomEvent('title:settings'));
   });
-}
+};
