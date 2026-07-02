@@ -7,6 +7,7 @@
 const SCREEN_MAP = {
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
+  BATTLE: 'screen-battle',
 };
 
 // ===== UTILITY FUNCTIONS =====
@@ -322,7 +323,11 @@ function renderExploreScreen(gameState) {
   drawExploreMap(gameState);
 
   // 戦闘UI表示状態を更新
-  renderBattleOverlay(gameState);
+  if (gameState.battle.isActive) {
+    renderBattleScreen(gameState);
+  } else {
+    hideBattleScreen();
+  }
 
   // メッセージを初期化
   if (!gameState.battle.isActive) {
@@ -342,6 +347,9 @@ function renderScreen(sceneName, gameState) {
       break;
     case 'EXPLORE':
       renderExploreScreen(gameState);
+      break;
+    case 'BATTLE':
+      renderBattleScreen(gameState);
       break;
   }
 }
@@ -461,7 +469,7 @@ function registerExploreControls() {
  */
 function handleExploreMove(direction) {
   const gameState = window.gameState;
-  if (!gameState || gameState.scene !== 'EXPLORE' || gameState.battle.isActive) {
+  if (!gameState || gameState.scene !== 'EXPLORE') {
     return;
   }
 
@@ -487,39 +495,38 @@ function handleExploreMove(direction) {
   drawExploreMap(gameState);
 
   if (gameState.battle.isActive) {
-    renderBattleOverlay(gameState);
-    setMessage('explore-message', gameState.battle.log[gameState.battle.log.length - 1] || '戦闘が開始しました。');
+    window.switchScene('BATTLE');
     return;
   }
 
   if (result.isEnemy || result.isBoss) {
-    renderBattleOverlay(gameState);
     setMessage('explore-message', '戦闘が開始しました。');
   }
 }
 
 /**
- * 戦闘オーバーレイの表示状態を更新
+ * 戦闘画面の表示内容を更新
  * @param {Object} gameState
  */
-function renderBattleOverlay(gameState) {
+function renderBattleScreen(gameState) {
   const overlay = document.getElementById('battle-overlay');
   const enemyName = document.getElementById('battle-enemy-name');
   const enemyHp = document.getElementById('battle-enemy-hp');
   const enemyHpBar = document.getElementById('hpbar-battle-enemy');
   const logBox = document.getElementById('battle-log');
 
-  if (!overlay) return;
+  const screen = document.getElementById('screen-battle');
+  if (!screen) return;
 
   if (!gameState?.battle?.isActive) {
-    overlay.classList.add('battle-overlay--hidden');
+    screen.classList.add('screen--hidden');
     if (logBox) {
       logBox.textContent = '戦闘開始。コマンドを選択してください。';
     }
     return;
   }
 
-  overlay.classList.remove('battle-overlay--hidden');
+  screen.classList.remove('screen--hidden');
 
   const enemy = gameState.battle.enemies[0];
   const enemyData = enemy ? DATA.ENEMIES[enemy.enemyId] : null;
@@ -536,6 +543,16 @@ function renderBattleOverlay(gameState) {
   updatePartyStatus(gameState, 'battle');
   if (logBox && gameState.battle.log.length > 0) {
     logBox.textContent = gameState.battle.log[gameState.battle.log.length - 1];
+  }
+}
+
+/**
+ * 戦闘画面を非表示にする
+ */
+function hideBattleScreen() {
+  const screen = document.getElementById('screen-battle');
+  if (screen) {
+    screen.classList.add('screen--hidden');
   }
 }
 
@@ -577,11 +594,11 @@ function bindBattleControls() {
           if (result.enemyDefeated) {
             EXPLORE.endBattleVictory(window.gameState);
           }
-          renderBattleOverlay(window.gameState);
+          renderBattleScreen(window.gameState);
           itemWindow.classList.add('window--hidden');
         } else {
           window.gameState.battle.log.push(result.message);
-          renderBattleOverlay(window.gameState);
+          renderBattleScreen(window.gameState);
         }
       });
       itemList.appendChild(button);
@@ -615,7 +632,7 @@ function bindBattleControls() {
     battleDefendBtn.addEventListener('click', () => {
       if (!window.gameState?.battle?.isActive) return;
       window.gameState.battle.log.push('防御して次の被ダメージを軽減した。');
-      renderBattleOverlay(window.gameState);
+      renderBattleScreen(window.gameState);
     });
   }
 
@@ -631,7 +648,7 @@ function bindBattleControls() {
       if (!window.gameState.battle.isActive) {
         setMessage('explore-message', result.message);
       }
-      renderBattleOverlay(window.gameState);
+      renderBattleScreen(window.gameState);
     });
   }
 
