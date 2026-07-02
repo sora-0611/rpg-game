@@ -184,6 +184,82 @@
   margin-top: auto;
 }
 
+/* ===== BATTLE OVERLAY ===== */
+.battle-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(6px);
+  z-index: 30;
+}
+
+.battle-overlay--hidden {
+  display: none;
+}
+
+.battle-panel {
+  width: min(100%, 760px);
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.battle-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.battle-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  background-color: rgba(255, 107, 107, 0.16);
+  color: var(--color-danger);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.battle-visual {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.battle-enemy-card {
+  min-height: 140px;
+}
+
+.battle-party-list {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.battle-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.battle-log-window {
+  margin: 0;
+  min-height: 92px;
+}
+
 /* ===== ITEMS WINDOW ===== */
 .items-list {
   display: flex;
@@ -281,6 +357,10 @@
 
   .party-cards {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .battle-visual {
+    grid-template-columns: 1fr;
   }
 }
 

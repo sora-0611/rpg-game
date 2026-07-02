@@ -68,6 +68,7 @@ function applyItemEffectInBattle(gameState, itemId) {
       }
       const target = gameState.party[targetIndex];
       STATE.healCharacter(gameState, targetIndex, item.effectValue);
+      STATE.consumeItemFromInventory(gameState, itemId, 1);
       return {
         success: true,
         message: `${target.name}が${item.effectValue}回復した。`,
@@ -81,6 +82,7 @@ function applyItemEffectInBattle(gameState, itemId) {
       gameState.party.forEach((_, index) => {
         STATE.healCharacter(gameState, index, item.effectValue);
       });
+      STATE.consumeItemFromInventory(gameState, itemId, 1);
       return {
         success: true,
         message: `パーティー全員が${item.effectValue}回復した。`,
@@ -94,6 +96,7 @@ function applyItemEffectInBattle(gameState, itemId) {
       }
       const enemy = gameState.battle.enemies[enemyIndex];
       enemy.hpCurrent = Math.max(0, enemy.hpCurrent - item.effectValue);
+      STATE.consumeItemFromInventory(gameState, itemId, 1);
       return {
         success: true,
         message: `${item.name}！敵に${item.effectValue}ダメージ。`,

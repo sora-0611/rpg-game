@@ -316,12 +316,18 @@ function renderExploreScreen(gameState) {
 
   // パーティーステータス更新
   updatePartyStatus(gameState, 'explore');
+  updatePartyStatus(gameState, 'battle');
 
   // 探索マップを描画
   drawExploreMap(gameState);
 
+  // 戦闘UI表示状態を更新
+  renderBattleOverlay(gameState);
+
   // メッセージを初期化
-  setMessage('explore-message', 'マップを探索してください。');
+  if (!gameState.battle.isActive) {
+    setMessage('explore-message', 'マップを探索してください。');
+  }
 }
 
 /**
@@ -345,6 +351,9 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
+  // 戦闘UIの初期化
+  bindBattleControls();
+
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -477,9 +486,159 @@ function handleExploreMove(direction) {
   updatePartyStatus(gameState, 'explore');
   drawExploreMap(gameState);
 
-  // 敵遭遇時はメッセージのみ表示（戦闘画面は未実装）
+  if (gameState.battle.isActive) {
+    renderBattleOverlay(gameState);
+    setMessage('explore-message', gameState.battle.log[gameState.battle.log.length - 1] || '戦闘が開始しました。');
+    return;
+  }
+
   if (result.isEnemy || result.isBoss) {
-    showToast('敵が現れた！（戦闘画面は後続フェーズで実装予定）', 'warning');
+    renderBattleOverlay(gameState);
+    setMessage('explore-message', '戦闘が開始しました。');
+  }
+}
+
+/**
+ * 戦闘オーバーレイの表示状態を更新
+ * @param {Object} gameState
+ */
+function renderBattleOverlay(gameState) {
+  const overlay = document.getElementById('battle-overlay');
+  const enemyName = document.getElementById('battle-enemy-name');
+  const enemyHp = document.getElementById('battle-enemy-hp');
+  const enemyHpBar = document.getElementById('hpbar-battle-enemy');
+  const logBox = document.getElementById('battle-log');
+
+  if (!overlay) return;
+
+  if (!gameState?.battle?.isActive) {
+    overlay.classList.add('battle-overlay--hidden');
+    if (logBox) {
+      logBox.textContent = '戦闘開始。コマンドを選択してください。';
+    }
+    return;
+  }
+
+  overlay.classList.remove('battle-overlay--hidden');
+
+  const enemy = gameState.battle.enemies[0];
+  const enemyData = enemy ? DATA.ENEMIES[enemy.enemyId] : null;
+  if (enemyName) {
+    enemyName.textContent = enemyData ? enemyData.name : '敵';
+  }
+  if (enemyHp && enemy) {
+    enemyHp.textContent = `${enemy.hpCurrent}/${enemy.hpMax}`;
+  }
+  if (enemyHpBar) {
+    updateHpBar('hpbar-battle-enemy', enemy ? enemy.hpCurrent : 0, enemy ? enemy.hpMax : 1);
+  }
+
+  updatePartyStatus(gameState, 'battle');
+  if (logBox && gameState.battle.log.length > 0) {
+    logBox.textContent = gameState.battle.log[gameState.battle.log.length - 1];
+  }
+}
+
+/**
+ * 戦闘コマンドイベントを登録
+ */
+function bindBattleControls() {
+  const battleFightBtn = document.getElementById('btn-battle-fight');
+  const battleDefendBtn = document.getElementById('btn-battle-defend');
+  const battleItemBtn = document.getElementById('btn-battle-item');
+  const battleFleeBtn = document.getElementById('btn-battle-flee');
+  const itemWindow = document.getElementById('battle-item-window');
+  const itemList = document.getElementById('battle-item-list');
+  const itemCloseBtn = document.getElementById('btn-battle-item-close');
+
+  const openItemWindow = () => {
+    if (!window.gameState?.battle?.isActive) return;
+    if (!itemWindow || !itemList) return;
+
+    itemList.innerHTML = '';
+    const inventory = ITEM.getInventoryItems(window.gameState);
+    if (inventory.length === 0) {
+      itemList.innerHTML = '<p class="item-effect">所持アイテムがありません。</p>';
+      itemWindow.classList.remove('window--hidden');
+      return;
+    }
+
+    inventory.forEach(entry => {
+      const itemData = entry.data;
+      const usableInBattle = itemData?.usableInBattle;
+      const button = document.createElement('button');
+      button.className = `btn btn--secondary btn--block ${usableInBattle ? '' : 'btn--disabled'}`;
+      button.textContent = `${itemData?.name || entry.itemId} x${entry.quantity}`;
+      button.disabled = !usableInBattle;
+      button.addEventListener('click', () => {
+        const result = ITEM.applyItemEffectInBattle(window.gameState, entry.itemId);
+        if (result.success) {
+          window.gameState.battle.log.push(result.message);
+          if (result.enemyDefeated) {
+            EXPLORE.endBattleVictory(window.gameState);
+          }
+          renderBattleOverlay(window.gameState);
+          itemWindow.classList.add('window--hidden');
+        } else {
+          window.gameState.battle.log.push(result.message);
+          renderBattleOverlay(window.gameState);
+        }
+      });
+      itemList.appendChild(button);
+    });
+    itemWindow.classList.remove('window--hidden');
+  };
+
+  if (battleFightBtn) {
+    battleFightBtn.addEventListener('click', () => {
+      if (!window.gameState?.battle?.isActive) return;
+      const enemy = window.gameState.battle.enemies[0];
+      if (!enemy) return;
+      const attacker = window.gameState.party[0];
+      const damage = Math.max(1, attacker.attack - (enemy.defense || 0));
+      enemy.hpCurrent = Math.max(0, enemy.hpCurrent - damage);
+      window.gameState.battle.log.push(`${attacker.name}が${damage}ダメージを与えた。`);
+      if (enemy.hpCurrent <= 0) {
+        EXPLORE.endBattleVictory(window.gameState);
+        setMessage('explore-message', '戦闘に勝利した！');
+      } else {
+        const enemyData = DATA.ENEMIES[enemy.enemyId];
+        const enemyDamage = Math.max(1, enemyData.baseAttack - window.gameState.party[0].defense);
+        window.gameState.party[0].hpCurrent = Math.max(0, window.gameState.party[0].hpCurrent - enemyDamage);
+        window.gameState.battle.log.push(`${enemyData.name}から${enemyDamage}ダメージ。`);
+      }
+      renderBattleOverlay(window.gameState);
+    });
+  }
+
+  if (battleDefendBtn) {
+    battleDefendBtn.addEventListener('click', () => {
+      if (!window.gameState?.battle?.isActive) return;
+      window.gameState.battle.log.push('防御して次の被ダメージを軽減した。');
+      renderBattleOverlay(window.gameState);
+    });
+  }
+
+  if (battleItemBtn) {
+    battleItemBtn.addEventListener('click', openItemWindow);
+  }
+
+  if (battleFleeBtn) {
+    battleFleeBtn.addEventListener('click', () => {
+      if (!window.gameState?.battle?.isActive) return;
+      const result = EXPLORE.tryEscapeBattle(window.gameState);
+      window.gameState.battle.log.push(result.message);
+      if (!window.gameState.battle.isActive) {
+        setMessage('explore-message', result.message);
+      }
+      renderBattleOverlay(window.gameState);
+    });
+  }
+
+  if (itemCloseBtn && itemWindow) {
+    itemCloseBtn.addEventListener('click', () => {
+      itemWindow.classList.add('window--hidden');
+    });
   }
 }
 
