@@ -26,9 +26,9 @@ function initializeGame() {
   // UIを初期化
   UI.initializeUI();
 
-  // マップ選択画面をそのまま表示
+  // タイトル画面から開始
   UI.hideAllScreens();
-  switchScene('MAP_SELECT');
+  switchScene('TITLE');
 }
 
 /**
@@ -68,7 +68,8 @@ function switchScene(newSceneName) {
  * ui.jsから参照されるので定義を統一
  */
 const SCENE_TO_SCREEN = {
-  TITLE: 'screen-maps',
+  TITLE: 'screen-title',
+  SETTINGS: 'screen-settings',
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
 };

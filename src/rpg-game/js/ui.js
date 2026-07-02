@@ -5,6 +5,8 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
+  TITLE: 'screen-title',
+  SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
 };
@@ -331,6 +333,10 @@ function renderExploreScreen(gameState) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
+    case 'TITLE':
+      break;
+    case 'SETTINGS':
+      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -345,6 +351,35 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
+  // タイトル画面ボタン
+  const btnTitleStart = document.getElementById('btn-title-start');
+  if (btnTitleStart) {
+    btnTitleStart.addEventListener('click', () => {
+      window.switchScene('MAP_SELECT');
+    });
+  }
+
+  const btnTitleSettings = document.getElementById('btn-title-settings');
+  if (btnTitleSettings) {
+    btnTitleSettings.addEventListener('click', () => {
+      window.switchScene('SETTINGS');
+    });
+  }
+
+  // 設定画面の戻るボタン
+  const btnSettingsBack = document.getElementById('btn-settings-back');
+  if (btnSettingsBack) {
+    btnSettingsBack.addEventListener('click', () => {
+      const lastScene = window.gameState?.lastScene || 'TITLE';
+      window.switchScene(lastScene);
+    });
+  }
+
+  // 設定JS初期化
+  if (window.SETTINGS) {
+    window.SETTINGS.initialize();
+  }
+
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -386,6 +421,25 @@ function initializeUI() {
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
       exploreMenu.classList.add('window--hidden');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('SETTINGS');
+    });
+  }
+
+  const btnMenuTitle = document.getElementById('btn-menu-title');
+  if (btnMenuTitle) {
+    btnMenuTitle.addEventListener('click', async () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
+      if (confirmed) {
+        window.switchScene('TITLE');
+      }
     });
   }
 
