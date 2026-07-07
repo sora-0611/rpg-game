@@ -8,6 +8,41 @@ const DEFAULT_SETTINGS = {
 const gameSettings = { ...DEFAULT_SETTINGS };
 window.gameSettings = gameSettings;
 
+function loadSettingsFromSave() {
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (sharedState?.settings) {
+        Object.assign(gameSettings, sharedState.settings);
+    }
+}
+
+function saveSettingsToSharedState() {
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (!sharedState) return;
+    sharedState.settings = { ...gameSettings };
+    window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+}
+
+function applySettingsToControls() {
+    document.querySelectorAll('.slider').forEach(slider => {
+        const value = slider.id === 'bgm-volume' ? gameSettings.bgmVolume : gameSettings.seVolume;
+        slider.value = value;
+        updateSliderFill(slider);
+    });
+
+    document.querySelectorAll('input[name="text-speed"]').forEach(radio => {
+        radio.checked = radio.value === gameSettings.textSpeed;
+    });
+
+    document.querySelectorAll('input[name="performance"]').forEach(radio => {
+        radio.checked = radio.value === gameSettings.performance;
+    });
+
+    const fullscreenToggle = document.getElementById('fullscreen');
+    if (fullscreenToggle) {
+        fullscreenToggle.checked = Boolean(document.fullscreenElement);
+    }
+}
+
 // スライダーの値をリアルタイムで更新
 function updateSliderFill(slider) {
     const sliderContainer = slider.closest('.slider-container');
@@ -28,6 +63,9 @@ function updateSliderFill(slider) {
 }
 
 // 初期化時にスライダーのフィルバーを設定
+loadSettingsFromSave();
+applySettingsToControls();
+
 document.querySelectorAll('.slider').forEach(slider => {
     // 初期値を設定
     updateSliderFill(slider);
@@ -41,6 +79,13 @@ document.querySelectorAll('.slider').forEach(slider => {
     // 入力時に更新
     slider.addEventListener('input', function() {
         updateSliderFill(this);
+        const wrapper = this.closest('.slider-wrapper');
+        if (wrapper) {
+            const id = this.id;
+            if (id === 'bgm-volume') gameSettings.bgmVolume = Number(this.value);
+            if (id === 'se-volume') gameSettings.seVolume = Number(this.value);
+        }
+        saveSettingsToSharedState();
     });
 });
 
@@ -55,6 +100,7 @@ document.querySelectorAll('.radio-button').forEach(radio => {
             const nextRadio = radios[(index + 1) % radios.length];
             nextRadio.checked = true;
             nextRadio.focus();
+            saveSettingsToSharedState();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
             e.preventDefault();
             const name = this.name;
@@ -63,6 +109,7 @@ document.querySelectorAll('.radio-button').forEach(radio => {
             const prevRadio = radios[(index - 1 + radios.length) % radios.length];
             prevRadio.checked = true;
             prevRadio.focus();
+            saveSettingsToSharedState();
         }
     });
 });
@@ -95,6 +142,20 @@ document.querySelectorAll('.toggle-checkbox').forEach(toggle => {
     updateFullscreenState();
 });
 
+document.querySelectorAll('input[name="text-speed"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        gameSettings.textSpeed = document.querySelector('input[name="text-speed"]:checked')?.value || 'normal';
+        saveSettingsToSharedState();
+    });
+});
+
+document.querySelectorAll('input[name="performance"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        gameSettings.performance = document.querySelector('input[name="performance"]:checked')?.value || 'high';
+        saveSettingsToSharedState();
+    });
+});
+
 // ミュートボタンの機能
 document.querySelectorAll('.mute-button').forEach(button => {
     // 前の音量を保存するデータ属性を初期化
@@ -122,6 +183,7 @@ document.querySelectorAll('.mute-button').forEach(button => {
         
         // スライダーのフィルバーを更新
         updateSliderFill(slider);
+        saveSettingsToSharedState();
     });
 });
 

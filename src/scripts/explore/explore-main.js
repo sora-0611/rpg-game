@@ -19,16 +19,16 @@ function setGameState(newState) {
 }
 
 function initializeGame() {
-  // ゲーム状態を作成
-  const initialState = STATE.createNewGameState();
-  setGameState(STATE.sanitizeGameState(initialState));
+  const savedState = window.GAME_SAVE?.loadSharedGameState?.();
+  const initialState = savedState || STATE.createNewGameState();
+  const sanitizedState = STATE.sanitizeGameState(initialState);
+  sanitizedState.isLoaded = true;
+  setGameState(sanitizedState);
 
-  // UIを初期化
   UI.initializeUI();
 
-  // マップ選択画面から開始
   UI.hideAllScreens();
-  switchScene('MAP_SELECT');
+  switchScene(sanitizedState.scene || 'MAP_SELECT');
 }
 
 /**
@@ -41,12 +41,10 @@ function switchScene(newSceneName) {
     return;
   }
 
-  // 前のシーンを保存（設定画面からの戻り先用）
   gameState.lastScene = gameState.scene;
-
-  // シーンを更新
   gameState.scene = newSceneName;
   gameState.updatedAt = new Date().toISOString();
+  window.GAME_SAVE?.saveSharedGameState?.(gameState);
 
   // 画面表示を更新
   UI.hideAllScreens();

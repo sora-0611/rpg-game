@@ -1,4 +1,8 @@
 window.addEventListener('title:start', function () {
+  const freshState = window.GAME_SAVE?.createDefaultSharedState?.() || null;
+  if (freshState) {
+    window.GAME_SAVE?.saveSharedGameState?.(freshState);
+  }
   window.location.href = '../explore/index.html';
 });
 

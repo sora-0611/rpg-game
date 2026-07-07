@@ -68,6 +68,35 @@
   // ---------- 初期化 ----------
 
   // 戦闘開始処理。enemyId未指定時は出現テーブルから抽選する（探索画面から渡される想定）
+  function persistBattleStateToSharedSave() {
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (!sharedState) return;
+    sharedState.scene = 'BATTLE';
+    sharedState.battle = {
+      isActive: state.phase !== 'DEFEAT' && state.phase !== 'VICTORY' && state.phase !== 'ESCAPED',
+      isBoss: Boolean(state.enemy?.isBoss),
+      currentEnemyId: state.enemy?.id || null,
+      enemies: state.enemy ? [state.enemy] : [],
+      turn: state.turnQueue?.length || 0,
+      isPlayerTurn: state.phase === 'PLAYER_TURN',
+      log: state.log || [],
+      canEscape: !state.enemy?.isBoss,
+    };
+    sharedState.party = state.characters.map((character) => ({
+      characterId: character.id,
+      name: character.name,
+      hpCurrent: character.hpCurrent,
+      hpMax: character.hpMax,
+      attack: character.attack,
+      defense: character.defense,
+      enhanceLevel: 1,
+      status: character.status || [],
+    }));
+    sharedState.inventory = state.inventory;
+    sharedState.updatedAt = new Date().toISOString();
+    window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+  }
+
   function startBattle(enemyId) {
     try {
       const enemyTemplate = ENEMY_MASTER[enemyId] || ENEMY_MASTER[pickRandomEncounterId()];
@@ -82,6 +111,7 @@
       hideConfirm();
       closeAllWindows();
       startPlayerRound();
+      persistBattleStateToSharedSave();
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
@@ -339,12 +369,14 @@
     if (itemCount > 0) resultText += ` アイテムを${itemCount}個手に入れた。`;
     logMessage(resultText);
     renderAll();
+    persistBattleStateToSharedSave();
   }
 
   function onDefeat() {
     state.phase = "DEFEAT";
     logMessage("全滅した。");
     renderAll();
+    persistBattleStateToSharedSave();
   }
 
   // ---------- メッセージ / 確認 ----------

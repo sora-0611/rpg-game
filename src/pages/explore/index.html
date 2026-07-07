@@ -122,6 +122,12 @@
             </button>
           </div>
         </div>
+
+        <aside class="window window--items window--hidden" id="explore-item-window" aria-label="アイテムウィンドウ">
+          <div class="window-title">アイテム</div>
+          <div id="explore-item-list" class="items-list"></div>
+          <button id="btn-explore-item-close" class="btn btn--secondary btn--block">×閉じる</button>
+        </aside>
       </div>
 
 
@@ -149,6 +155,7 @@
   <div id="dialog-container" class="dialog-container"></div>
 
   <!-- Scripts (Load order is important) -->
+  <script src="../../scripts/shared/game-save.js"></script>
   <script src="../../scripts/explore/explore-data.js"></script>
   <script src="../../scripts/explore/explore-state.js"></script>
   <script src="../../scripts/explore/explore-map.js"></script>

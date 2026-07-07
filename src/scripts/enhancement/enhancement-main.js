@@ -36,11 +36,34 @@ const partyData = [
     }
 ];
 
-// ゲーム内で使えるコインの総数です。画面の上部に表示されます。
-let coins = 400; // コインの初期値(マジックナンバー)です。後で修正が必要です。
-// HTML の要素を JavaScript から扱えるように取得しています。
+let coins = 0;
 const coinValue = document.getElementById('coinValue');
 const enhanceGrid = document.getElementById('enhanceGrid');
+
+function loadEnhancementState() {
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (!sharedState) return;
+    coins = Number(sharedState.player?.coin || 0);
+    const party = Array.isArray(sharedState.party) ? sharedState.party : [];
+    partyData.forEach((card, index) => {
+        const savedCharacter = party[index];
+        if (savedCharacter?.enhanceLevel) {
+            card.weapon.level = Math.min(savedCharacter.enhanceLevel, card.weapon.maxLevel);
+            card.weapon.cost = card.weapon.level >= card.weapon.maxLevel ? 0 : Math.floor(20 * Math.pow(10, card.weapon.level - 1));
+        }
+    });
+}
+
+function saveEnhancementState() {
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (!sharedState) return;
+    sharedState.player.coin = coins;
+    sharedState.party = sharedState.party.map((character, index) => ({
+        ...character,
+        enhanceLevel: partyData[index]?.weapon?.level || character.enhanceLevel || 1,
+    }));
+    window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+}
 
 // 星の数を文字列にして返す関数です。
 // 例: level が 2 なら「★★」を返します。
@@ -87,16 +110,15 @@ function renderCard(card) {
         coins -= weapon.cost;
         weapon.level = Math.min(weapon.level + 1, weapon.maxLevel);
 
-        // 最大強化になったら以降の強化コストを0にします。
         if (weapon.level === weapon.maxLevel) {
             weapon.cost = 0;
         } else {
-            // まだ強化できる場合は次の強化コストを上げます。
             weapon.cost = Math.floor(weapon.cost * 10);
         }
 
-        updateCoinDisplay(); // コイン表示を更新
-        renderAllCards(); // カード全体を再描画
+        updateCoinDisplay();
+        renderAllCards();
+        saveEnhancementState();
     });
 
     // カード全体の見た目を作っています。
@@ -152,6 +174,7 @@ function setupBackButton() {
 }
 
 // 最初に画面を表示するための処理です。
+loadEnhancementState();
 updateCoinDisplay();
 renderAllCards();
 setupBackButton();

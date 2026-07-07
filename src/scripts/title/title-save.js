@@ -1,7 +1,7 @@
 var RPG = RPG || {};
 
 RPG.Save = (function () {
-  var SAVE_KEY = 'rpgGameSaveData';
+  var SAVE_KEY = 'rpg-game-save';
   var SAVE_VERSION = '1.0.0';
 
   function hasSaveData() {
@@ -13,13 +13,7 @@ RPG.Save = (function () {
     if (!raw) return false;
     try {
       var data = JSON.parse(raw);
-      return (
-        typeof data.version === 'string' &&
-        typeof data.coin === 'number' && data.coin >= 0 &&
-        Array.isArray(data.partyState) &&
-        Array.isArray(data.inventory) &&
-        typeof data.mapProgress === 'object' && data.mapProgress !== null
-      );
+      return !!data && typeof data === 'object' && typeof data.version === 'string';
     } catch (e) {
       return false;
     }
@@ -30,7 +24,7 @@ RPG.Save = (function () {
   }
 
   function createNewSaveData() {
-    var data = {
+    var data = window.GAME_SAVE?.createDefaultSharedState?.() || {
       saveId: 'fixed',
       version: SAVE_VERSION,
       playTime: 0,

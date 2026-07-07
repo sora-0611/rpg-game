@@ -101,8 +101,10 @@ function calculateCharacterStats(characterId, enhanceLevel = 1) {
  */
 function createNewGameState() {
   const now = new Date().toISOString();
+  const sharedState = typeof window !== 'undefined' && window.GAME_SAVE?.createDefaultSharedState
+    ? window.GAME_SAVE.createDefaultSharedState()
+    : null;
 
-  // パーティーメンバーの初期化
   const party = DATA.CONSTANTS.CHARACTER_IDS.map(charId => {
     const stats = calculateCharacterStats(charId, 1);
     return {
@@ -118,77 +120,77 @@ function createNewGameState() {
     };
   });
 
-  return {
-    // ゲーム全体
+  const initialState = sharedState || {
     scene: 'MAP_SELECT',
     version: DATA.CONSTANTS.SAVE_VERSION,
     playTime: 0,
     isLoaded: false,
-
-    // プレイヤー
-    player: {
-      coin: DATA.CONSTANTS.INITIAL_COIN,
-      currentMapId: 1,
-      pos: { x: 1, y: 1 },
-    },
-
-    // パーティー（3キャラ固定）
-    party: party,
-
-    // インベントリ
+    player: { coin: DATA.CONSTANTS.INITIAL_COIN, currentMapId: 1, pos: { x: 1, y: 1 } },
+    party: [],
     inventory: [],
-
-    // マップ進捗
     mapProgress: {
-      1: {
-        visited: false,
-        bossDefeated: false,
-        openedChestIds: [],
-        visitedPositions: [],
-      },
-      2: {
-        visited: false,
-        bossDefeated: false,
-        openedChestIds: [],
-        visitedPositions: [],
-      },
-      3: {
-        visited: false,
-        bossDefeated: false,
-        openedChestIds: [],
-        visitedPositions: [],
-      },
+      1: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
+      2: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
+      3: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
     },
-
-    // 戦闘状態（戦闘中のみ使用）
-    battle: {
-      isActive: false,
-      isBoss: false,
-      currentEnemyId: null,
-      enemies: [],
-      turn: 0,
-      isPlayerTurn: true,
-      log: [],
-      canEscape: true,
-    },
-
-    // UI状態
-    ui: {
-      menuOpen: false,
-      itemWindowOpen: false,
-      dialogOpen: false,
-      message: '',
-    },
-
-    // フラグ
-    flags: {
-      seenTutorial: false,
-      finalBossDefeated: false,
-    },
-
-    // メタ
+    battle: { isActive: false, isBoss: false, currentEnemyId: null, enemies: [], turn: 0, isPlayerTurn: true, log: [], canEscape: true },
+    ui: { menuOpen: false, itemWindowOpen: false, dialogOpen: false, message: '' },
+    flags: { seenTutorial: false, finalBossDefeated: false },
+    settings: { bgmVolume: 100, seVolume: 100, textSpeed: 'normal', performance: 'high' },
     updatedAt: now,
   };
+
+  initialState.scene = 'MAP_SELECT';
+  initialState.version = DATA.CONSTANTS.SAVE_VERSION;
+  initialState.playTime = 0;
+  initialState.isLoaded = false;
+  initialState.player = {
+    coin: DATA.CONSTANTS.INITIAL_COIN,
+    currentMapId: 1,
+    pos: { x: 1, y: 1 },
+    ...(initialState.player || {}),
+  };
+  initialState.party = party;
+  initialState.inventory = [];
+  initialState.mapProgress = {
+    1: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
+    2: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
+    3: { visited: false, bossDefeated: false, openedChestIds: [], visitedPositions: [] },
+    ...(initialState.mapProgress || {}),
+  };
+  initialState.battle = {
+    isActive: false,
+    isBoss: false,
+    currentEnemyId: null,
+    enemies: [],
+    turn: 0,
+    isPlayerTurn: true,
+    log: [],
+    canEscape: true,
+    ...(initialState.battle || {}),
+  };
+  initialState.ui = {
+    menuOpen: false,
+    itemWindowOpen: false,
+    dialogOpen: false,
+    message: '',
+    ...(initialState.ui || {}),
+  };
+  initialState.flags = {
+    seenTutorial: false,
+    finalBossDefeated: false,
+    ...(initialState.flags || {}),
+  };
+  initialState.settings = {
+    bgmVolume: 100,
+    seVolume: 100,
+    textSpeed: 'normal',
+    performance: 'high',
+    ...(initialState.settings || {}),
+  };
+  initialState.updatedAt = now;
+
+  return initialState;
 }
 
 /**
@@ -199,6 +201,10 @@ function createNewGameState() {
 function sanitizeGameState(state) {
   if (!state || typeof state !== 'object') {
     return createNewGameState();
+  }
+
+  if (state.settings && typeof state.settings === 'object') {
+    state.settings = { ...state.settings };
   }
 
   // 基本フィールドの補正

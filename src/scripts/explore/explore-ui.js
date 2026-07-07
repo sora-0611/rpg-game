@@ -461,16 +461,24 @@ function initializeUI() {
   // 探索画面メニュー
   const btnExploreMenu = document.getElementById('btn-explore-menu');
   const exploreMenu = document.getElementById('explore-menu');
+  const setExploreMenuVisible = (isVisible) => {
+    if (!exploreMenu) return;
+    exploreMenu.classList.toggle('window--hidden', !isVisible);
+  };
+
   if (btnExploreMenu && exploreMenu) {
     btnExploreMenu.addEventListener('click', () => {
-      exploreMenu.classList.toggle('window--hidden');
+      if (document.querySelector('.dialog-overlay')) {
+        return;
+      }
+      setExploreMenuVisible(exploreMenu.classList.contains('window--hidden'));
     });
   }
 
   const btnMenuMaps = document.getElementById('btn-menu-maps');
   if (btnMenuMaps) {
     btnMenuMaps.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      setExploreMenuVisible(false);
       window.switchScene('MAP_SELECT');
     });
   }
@@ -478,15 +486,65 @@ function initializeUI() {
   const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
   if (btnMenuUpgrade) {
     btnMenuUpgrade.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      setExploreMenuVisible(false);
       window.location.href = '../enhancement/index.html';
+    });
+  }
+
+  const itemWindow = document.getElementById('explore-item-window');
+  const itemList = document.getElementById('explore-item-list');
+  const btnMenuItems = document.getElementById('btn-menu-items');
+  const btnExploreItemClose = document.getElementById('btn-explore-item-close');
+
+  const renderExploreItemWindow = () => {
+    if (!itemList) return;
+    const items = window.ITEM?.getInventoryItems?.(window.gameState) || [];
+    itemList.innerHTML = '';
+
+    if (!items.length) {
+      itemList.innerHTML = '<div class="item-card item-card--disabled"><div class="item-info"><span class="item-name">アイテムなし</span><span class="item-effect">所持しているアイテムがありません</span></div></div>';
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-info">
+          <span class="item-name">${item.data?.name || 'アイテム'}</span>
+          <span class="item-effect">${item.data?.effectType || ''}</span>
+        </div>
+        <span class="item-quantity">${item.quantity}個</span>
+      `;
+      itemList.appendChild(card);
+    });
+  };
+
+  const toggleExploreItemWindow = (isOpen) => {
+    if (!itemWindow) return;
+    itemWindow.classList.toggle('window--hidden', !isOpen);
+    if (isOpen) {
+      renderExploreItemWindow();
+    }
+  };
+
+  if (btnMenuItems) {
+    btnMenuItems.addEventListener('click', () => {
+      setExploreMenuVisible(false);
+      toggleExploreItemWindow(true);
+    });
+  }
+
+  if (btnExploreItemClose) {
+    btnExploreItemClose.addEventListener('click', () => {
+      toggleExploreItemWindow(false);
     });
   }
 
   const btnMenuSettings = document.getElementById('btn-menu-settings');
   if (btnMenuSettings) {
     btnMenuSettings.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      setExploreMenuVisible(false);
       sessionStorage.setItem('settings-return-target', 'explore');
       window.location.href = '../settings/index.html';
     });
@@ -495,14 +553,19 @@ function initializeUI() {
   const btnMenuClose = document.getElementById('btn-menu-close');
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
-      exploreMenu.classList.add('window--hidden');
+      setExploreMenuVisible(false);
+      toggleExploreItemWindow(false);
     });
   }
 
   const btnMenuTitle = document.getElementById('btn-menu-title');
   if (btnMenuTitle) {
     btnMenuTitle.addEventListener('click', async () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      if (document.querySelector('.dialog-overlay')) {
+        return;
+      }
+      setExploreMenuVisible(false);
+      toggleExploreItemWindow(false);
       const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
       if (confirmed) {
         window.location.href = '../title/index.html';
