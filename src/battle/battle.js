@@ -261,11 +261,27 @@
     return state.inventory.reduce((sum, entry) => sum + entry.quantity, 0);
   }
 
+  function isHpFullForItem(item) {
+    if (item.effectType !== "HP回復") return false;
+    if (item.target === "single") {
+      const target = getActingCharacter();
+      return target.hpCurrent >= target.hpMax;
+    }
+    if (item.target === "party") {
+      return state.characters.every((c) => c.hpCurrent <= 0 || c.hpCurrent >= c.hpMax);
+    }
+    return false;
+  }
+
   function selectItem(itemId) {
     const item = ITEM_MASTER[itemId];
     if (!item.usableInBattle) {
       // エラー・例外仕様書: 戦闘で使用できないアイテムを使う
       logMessage("このアイテムは戦闘では使用できません。");
+      return;
+    }
+    if (isHpFullForItem(item)) {
+      logMessage("HPが満タンのため使用できません。");
       return;
     }
     state.pendingItemId = itemId;
@@ -462,7 +478,8 @@
     state.inventory.forEach((entry) => {
       const item = ITEM_MASTER[entry.itemId];
       const row = document.createElement("li");
-      row.className = "item-row" + (item.usableInBattle ? "" : " is-unavailable");
+      const isUnavailable = !item.usableInBattle || isHpFullForItem(item);
+      row.className = "item-row" + (isUnavailable ? " is-unavailable" : "");
       row.innerHTML = `<span>・${item.name}</span><span class="item-row-qty">×${entry.quantity}</span>`;
       row.addEventListener("click", () => selectItem(item.itemId));
       dom.itemList.appendChild(row);
