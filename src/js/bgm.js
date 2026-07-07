@@ -1,75 +1,125 @@
+// このjsファイルはBGM再生管理用共通モジュールです.
 (function () {
-    const BGM_SRC = './甘茶の音楽工房_フィヨルドの澄んだ風.mp3';
+    const STORAGE_KEY = 'rpg-bgm-state';
+    const scriptElement = document.currentScript || document.querySelector('script[src*="bgm.js"]');
+    const scriptBaseUrl = scriptElement ? new URL('.', scriptElement.src) : new URL('./', window.location.href);
+    const BGM_SRC = new URL('./甘茶の音楽工房_フィヨルドの澄んだ風.mp3', scriptBaseUrl).href;
     const DEFAULT_VOLUME = 100;
 
     const state = {
         audio: null,
         volume: DEFAULT_VOLUME,
         isPlaying: false,
-        isInitialized: false
+        currentTime: 0,
+        initialized: false
     };
+
+    function readPersistedState() {
+        try {
+            const rawState = sessionStorage.getItem(STORAGE_KEY);
+            if (!rawState) {
+                return null;
+            }
+            return JSON.parse(rawState);
+        } catch (error) {
+            console.warn('BGM状態の読み込みに失敗しました:', error);
+            return null;
+        }
+    }
+
+    function writePersistedState() {
+        try {
+            const snapshot = {
+                volume: state.volume,
+                isPlaying: state.isPlaying,
+                currentTime: state.currentTime
+            };
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+        } catch (error) {
+            console.warn('BGM状態の保存に失敗しました:', error);
+        }
+    }
 
     function ensureAudioElement() {
         if (state.audio) {
             return state.audio;
         }
 
-        const existingAudio = document.getElementById('bgm-audio');
-        if (existingAudio) {
-            state.audio = existingAudio;
-        } else {
-            const audio = document.createElement('audio');
-            audio.id = 'bgm-audio';
-            audio.loop = true;
-            audio.preload = 'auto';
-            audio.src = BGM_SRC;
-            document.body.appendChild(audio);
-            state.audio = audio;
-        }
+        const audio = document.createElement('audio');
+        audio.id = 'bgm-audio';
+        audio.loop = true;
+        audio.preload = 'auto';
+        audio.src = BGM_SRC;
+        audio.volume = state.volume / 100;
+        audio.setAttribute('data-bgm-managed', 'true');
+        document.body.appendChild(audio);
+        state.audio = audio;
 
-        state.audio.volume = state.volume / 100;
-        state.audio.setAttribute('data-bgm-managed', 'true');
-        return state.audio;
+        audio.addEventListener('timeupdate', () => {
+            state.currentTime = audio.currentTime;
+            writePersistedState();
+        });
+
+        audio.addEventListener('pause', () => {
+            state.isPlaying = false;
+            state.currentTime = audio.currentTime;
+            writePersistedState();
+        });
+
+        audio.addEventListener('play', () => {
+            state.isPlaying = true;
+            state.currentTime = audio.currentTime;
+            writePersistedState();
+        });
+
+        return audio;
     }
 
     function applyVolume(nextVolume) {
         const safeVolume = Math.max(0, Math.min(100, Number(nextVolume) || 0));
         state.volume = safeVolume;
 
-        const audio = ensureAudioElement();
-        audio.volume = safeVolume / 100;
+        if (state.audio) {
+            state.audio.volume = safeVolume / 100;
+        }
+        writePersistedState();
     }
 
     function play() {
         const audio = ensureAudioElement();
+        const persistedState = readPersistedState();
+        const nextCurrentTime = typeof persistedState?.currentTime === 'number'
+            ? persistedState.currentTime
+            : state.currentTime;
 
-        if (!audio.src) {
-            audio.src = BGM_SRC;
+        state.currentTime = nextCurrentTime;
+        audio.volume = state.volume / 100;
+        audio.src = BGM_SRC;
+
+        if (state.currentTime > 0 && Number.isFinite(audio.duration) && audio.duration > 0) {
+            audio.currentTime = Math.min(state.currentTime, audio.duration);
         }
 
-        if (state.isPlaying && !audio.paused) {
-            return Promise.resolve();
-        }
-
-        if (audio.paused) {
-            return audio.play().then(() => {
-                state.isPlaying = true;
-            }).catch((error) => {
-                console.error('BGMの再生に失敗しました:', error);
-                state.isPlaying = false;
-            });
-        }
-
-        state.isPlaying = true;
-        return Promise.resolve();
+        return audio.play().then(() => {
+            state.isPlaying = true;
+            state.currentTime = audio.currentTime;
+            writePersistedState();
+        }).catch((error) => {
+            console.error('BGMの再生に失敗しました:', error);
+            state.isPlaying = false;
+            writePersistedState();
+        });
     }
 
     function pause() {
-        const audio = ensureAudioElement();
-        if (!audio.paused) {
-            audio.pause();
+        if (!state.audio) {
+            return;
         }
+
+        state.currentTime = state.audio.currentTime;
+        state.audio.pause();
         state.isPlaying = false;
+        writePersistedState();
     }
 
     function setVolume(nextVolume) {
@@ -84,28 +134,36 @@
     }
 
     function initialize() {
-        if (state.isInitialized) {
+        if (state.initialized) {
             return;
         }
 
-        state.isInitialized = true;
-        ensureAudioElement();
-        applyVolume(state.volume);
+        state.initialized = true;
+        const persistedState = readPersistedState();
+        if (persistedState && typeof persistedState.volume === 'number') {
+            state.volume = persistedState.volume;
+        }
+        if (persistedState && typeof persistedState.currentTime === 'number') {
+            state.currentTime = persistedState.currentTime;
+        }
 
         const tryPlayOnInteraction = () => {
+            document.removeEventListener('pointerdown', tryPlayOnInteraction);
+            document.removeEventListener('keydown', tryPlayOnInteraction);
+            document.removeEventListener('touchstart', tryPlayOnInteraction);
+
             if (state.volume > 0) {
                 play();
             }
-            document.removeEventListener('pointerdown', tryPlayOnInteraction);
-            document.removeEventListener('keydown', tryPlayOnInteraction);
         };
 
         document.addEventListener('pointerdown', tryPlayOnInteraction, { once: true });
         document.addEventListener('keydown', tryPlayOnInteraction, { once: true });
+        document.addEventListener('touchstart', tryPlayOnInteraction, { once: true });
 
-        play().catch(() => {
-            // ユーザー操作前の自動再生はブラウザ制限により失敗する場合があるため、ここでは握りつぶす
-        });
+        if (persistedState && persistedState.isPlaying && state.volume > 0) {
+            play();
+        }
     }
 
     if (document.readyState === 'loading') {
