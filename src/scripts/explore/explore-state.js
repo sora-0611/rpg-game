@@ -345,6 +345,15 @@ function addItemToInventory(state, itemId, quantity = 1) {
     state.inventory.push({ itemId, quantity });
   }
 
+  if (typeof window !== 'undefined' && window.GAME_SAVE?.saveSharedGameState) {
+    const sharedState = window.GAME_SAVE.loadSharedGameState();
+    if (sharedState) {
+      sharedState.inventory = state.inventory.map(entry => ({ itemId: entry.itemId, quantity: entry.quantity }));
+      sharedState.player.coin = Number(state.player?.coin || 0);
+      window.GAME_SAVE.saveSharedGameState(sharedState);
+    }
+  }
+
   return state;
 }
 
@@ -364,6 +373,15 @@ function consumeItemFromInventory(state, itemId, quantity = 1) {
   state.inventory[inventoryIndex].quantity -= quantity;
   if (state.inventory[inventoryIndex].quantity <= 0) {
     state.inventory.splice(inventoryIndex, 1);
+  }
+
+  if (typeof window !== 'undefined' && window.GAME_SAVE?.saveSharedGameState) {
+    const sharedState = window.GAME_SAVE.loadSharedGameState();
+    if (sharedState) {
+      sharedState.inventory = state.inventory.map(entry => ({ itemId: entry.itemId, quantity: entry.quantity }));
+      sharedState.player.coin = Number(state.player?.coin || 0);
+      window.GAME_SAVE.saveSharedGameState(sharedState);
+    }
   }
 
   return true;

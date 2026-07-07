@@ -75,7 +75,7 @@
     sharedState.battle = {
       isActive: state.phase !== 'DEFEAT' && state.phase !== 'VICTORY' && state.phase !== 'ESCAPED',
       isBoss: Boolean(state.enemy?.isBoss),
-      currentEnemyId: state.enemy?.id || null,
+      currentEnemyId: state.enemy?.enemyId || state.enemy?.id || null,
       enemies: state.enemy ? [state.enemy] : [],
       turn: state.turnQueue?.length || 0,
       isPlayerTurn: state.phase === 'PLAYER_TURN',
@@ -83,18 +83,45 @@
       canEscape: !state.enemy?.isBoss,
     };
     sharedState.party = state.characters.map((character) => ({
-      characterId: character.id,
+      characterId: character.characterId || character.id,
       name: character.name,
       hpCurrent: character.hpCurrent,
       hpMax: character.hpMax,
       attack: character.attack,
       defense: character.defense,
-      enhanceLevel: 1,
+      enhanceLevel: character.enhanceLevel || 1,
       status: character.status || [],
     }));
-    sharedState.inventory = state.inventory;
+    sharedState.inventory = state.inventory.map((entry) => ({ itemId: entry.itemId, quantity: entry.quantity }));
+    sharedState.player.coin = Number(sharedState.player?.coin || 0);
     sharedState.updatedAt = new Date().toISOString();
     window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+  }
+
+  function returnToExploreScreen() {
+    try {
+      const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+      if (sharedState) {
+        sharedState.scene = 'EXPLORE';
+        sharedState.battle = {
+          ...(sharedState.battle || {}),
+          isActive: false,
+          currentEnemyId: null,
+          enemies: [],
+          turn: 0,
+          isPlayerTurn: true,
+          canEscape: true,
+        };
+        sharedState.updatedAt = new Date().toISOString();
+        window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    window.setTimeout(() => {
+      window.location.href = '../explore/index.html';
+    }, 500);
   }
 
   function startBattle(enemyId) {
@@ -105,7 +132,10 @@
       }
       state.characters = CHARACTERS_BASE.map((c) => Object.assign({}, c, { hpCurrent: c.hpMax, isDefending: false }));
       state.enemy = Object.assign({}, enemyTemplate, { hpCurrent: enemyTemplate.hpMax });
-      state.inventory = INITIAL_INVENTORY.map((entry) => Object.assign({}, entry));
+      const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+      state.inventory = Array.isArray(sharedState?.inventory) && sharedState.inventory.length > 0
+        ? sharedState.inventory.map((entry) => ({ itemId: entry.itemId, quantity: entry.quantity }))
+        : INITIAL_INVENTORY.map((entry) => Object.assign({}, entry));
       state.phase = "PLAYER_TURN";
       state.pendingItemId = null;
       hideConfirm();
@@ -256,6 +286,8 @@
       state.phase = "ESCAPED";
       logMessage("逃げた。");
       renderAll();
+      persistBattleStateToSharedSave();
+      returnToExploreScreen();
     } else {
       logMessage("うまく逃げられなかった！");
       advanceTurn();
@@ -305,7 +337,11 @@
   function onItemConfirmYes() {
     const itemId = state.pendingItemId;
     const item = ITEM_MASTER[itemId];
-    consumeInventoryItem(itemId);
+    const consumed = consumeInventoryItem(itemId);
+    if (!consumed) {
+      logMessage("アイテムがありません。");
+      return;
+    }
 
     let resultText = "";
     if (item.effectType === "HP回復" && item.target === "single") {
@@ -332,6 +368,7 @@
     state.pendingItemId = null;
     hideConfirm();
     logMessage(resultText);
+    persistBattleStateToSharedSave();
     renderItemList();
     renderAll();
 
@@ -348,11 +385,12 @@
 
   function consumeInventoryItem(itemId) {
     const entry = state.inventory.find((e) => e.itemId === itemId);
-    if (!entry) return;
+    if (!entry) return false;
     entry.quantity -= 1;
     if (entry.quantity <= 0) {
       state.inventory = state.inventory.filter((e) => e.itemId !== itemId);
     }
+    return true;
   }
 
   // ---------- 勝敗 ----------
@@ -364,12 +402,27 @@
     const itemCount = Math.random() < enemy.itemDropRate
       ? minDrop + Math.floor(Math.random() * (maxDrop - minDrop + 1))
       : 0;
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (sharedState) {
+      sharedState.player.coin = Number(sharedState.player?.coin || 0) + coin;
+      for (let index = 0; index < itemCount; index += 1) {
+        const itemId = Object.keys(ITEM_MASTER)[index % Object.keys(ITEM_MASTER).length];
+        const inventoryEntry = sharedState.inventory.find((entry) => entry.itemId === itemId);
+        if (inventoryEntry) {
+          inventoryEntry.quantity += 1;
+        } else {
+          sharedState.inventory.push({ itemId, quantity: 1 });
+        }
+      }
+      window.GAME_SAVE?.saveSharedGameState?.(sharedState);
+    }
     let resultText = `${enemy.name}を倒した。`;
     if (coin > 0) resultText += ` コインを${coin}枚手に入れた。`;
     if (itemCount > 0) resultText += ` アイテムを${itemCount}個手に入れた。`;
     logMessage(resultText);
     renderAll();
     persistBattleStateToSharedSave();
+    returnToExploreScreen();
   }
 
   function onDefeat() {

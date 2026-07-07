@@ -62,25 +62,23 @@ const RANDOM_ENCOUNTER_TABLE = [
   { enemyId: "lastboss", weight: 2 },
 ];
 
-// アイテムマスタ（回復／全体回復／攻撃／戦闘不可アイテムの例）
+// アイテムマスタ（探索画面側のデータ定義と共通化）
 const ITEM_MASTER = {
-  1: { itemId: 1, name: "回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 10 },
-  2: { itemId: 2, name: "回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 20 },
-  3: { itemId: 3, name: "回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 30 },
-  4: { itemId: 4, name: "全体回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 5 },
-  5: { itemId: 5, name: "全体回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 10 },
-  6: { itemId: 6, name: "全体回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 15 },
-  7: { itemId: 7, name: "攻撃アイテム★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 10 },
-  8: { itemId: 8, name: "攻撃アイテム★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 20 },
-  9: { itemId: 9, name: "攻撃アイテム★★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 30 },
-  10: { itemId: 10, name: "マップの鍵", category: "探索イベント用", usableInExplore: true, usableInBattle: false, effectType: "イベント", target: "none", effectValue: 0 },
+  heal_1: { itemId: "heal_1", name: "回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 10 },
+  heal_2: { itemId: "heal_2", name: "回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 20 },
+  heal_3: { itemId: "heal_3", name: "回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 30 },
+  heal_group_1: { itemId: "heal_group_1", name: "全体回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 5 },
+  heal_group_2: { itemId: "heal_group_2", name: "全体回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 10 },
+  heal_group_3: { itemId: "heal_group_3", name: "全体回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 15 },
+  dmg_1: { itemId: "dmg_1", name: "攻撃アイテム★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 10 },
+  dmg_2: { itemId: "dmg_2", name: "攻撃アイテム★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 20 },
+  dmg_3: { itemId: "dmg_3", name: "攻撃アイテム★★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 30 },
 };
 
-// 動作確認用の初期所持アイテム（探索画面側の所持品データが未実装のためのダミー）
+// 初期所持アイテムは探索画面のインベントリと共有する
 const INITIAL_INVENTORY = [
-  { itemId: 1, quantity: 2 },
-  { itemId: 2, quantity: 1 },
-  { itemId: 4, quantity: 1 },
-  { itemId: 7, quantity: 2 },
-  { itemId: 10, quantity: 1 },
+  { itemId: "heal_1", quantity: 2 },
+  { itemId: "heal_2", quantity: 1 },
+  { itemId: "heal_group_1", quantity: 1 },
+  { itemId: "dmg_1", quantity: 2 },
 ];

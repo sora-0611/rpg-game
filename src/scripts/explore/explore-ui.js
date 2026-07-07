@@ -311,9 +311,13 @@ function drawExploreMap(gameState) {
  * @param {Object} gameState
  */
 function renderExploreScreen(gameState) {
+  const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+  const coin = sharedState?.player?.coin ?? gameState.player.coin;
+  gameState.player.coin = coin;
+
   // コイン表示更新
-  setText('explore-coin', `コイン: ${gameState.player.coin}`);
-  setText('menu-coin', `${gameState.player.coin}`);
+  setText('explore-coin', `コイン: ${coin}`);
+  setText('menu-coin', `${coin}`);
 
   // パーティーステータス更新
   updatePartyStatus(gameState, 'explore');
@@ -499,6 +503,10 @@ function initializeUI() {
   const renderExploreItemWindow = () => {
     if (!itemList) return;
     const items = window.ITEM?.getInventoryItems?.(window.gameState) || [];
+    const sharedState = window.GAME_SAVE?.loadSharedGameState?.();
+    if (sharedState?.inventory) {
+      window.gameState.inventory = sharedState.inventory.map(entry => ({ itemId: entry.itemId, quantity: entry.quantity }));
+    }
     itemList.innerHTML = '';
 
     if (!items.length) {
