@@ -423,8 +423,9 @@
   }
 
   // ワイヤーフレームの「プレイヤー」枠は、行動中（または先頭の生存中）キャラクターを表示する
+  // VICTORY/ESCAPEDは直前まで行動していたキャラクターのHPをそのまま表示する（先頭生存者に切り替えるとHP表示が瞬間的に不一致に見えるため）
   function renderActiveCharacterBox() {
-    const displayCharacter = state.phase === "PLAYER_TURN"
+    const displayCharacter = state.phase === "PLAYER_TURN" || state.phase === "VICTORY" || state.phase === "ESCAPED"
       ? getActingCharacter()
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
