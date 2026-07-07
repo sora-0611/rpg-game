@@ -445,6 +445,11 @@ function initializeUI() {
       button.addEventListener('click', () => {
         // マップ選択（後続フェーズで実装）
         console.log(`Map ${mapId} selected`);
+        // 別のマップに切り替える場合は初期位置からスタートする
+        // （同じマップを選び直した場合は探索中の位置を維持する）
+        if (window.gameState.player.currentMapId !== mapId) {
+          window.gameState.player.pos = { x: 1, y: 1 };
+        }
         window.gameState.player.currentMapId = mapId;
         window.switchScene('EXPLORE');
       });
