@@ -63,18 +63,24 @@ const RANDOM_ENCOUNTER_TABLE = [
 ];
 
 // アイテムマスタ（回復／全体回復／攻撃／戦闘不可アイテムの例）
+// dropRate: バランス仕様書「アイテム」表のドロップ率（%）。戦闘勝利時のドロップ抽選に使用。
 const ITEM_MASTER = {
-  1: { itemId: 1, name: "回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 10 },
-  2: { itemId: 2, name: "回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 20 },
-  3: { itemId: 3, name: "回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 30 },
-  4: { itemId: 4, name: "全体回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 5 },
-  5: { itemId: 5, name: "全体回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 10 },
-  6: { itemId: 6, name: "全体回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 15 },
-  7: { itemId: 7, name: "攻撃アイテム★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 10 },
-  8: { itemId: 8, name: "攻撃アイテム★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 20 },
-  9: { itemId: 9, name: "攻撃アイテム★★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 30 },
+  1: { itemId: 1, name: "回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 10, dropRate: 90 },
+  2: { itemId: 2, name: "回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 20, dropRate: 60 },
+  3: { itemId: 3, name: "回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "single", effectValue: 30, dropRate: 20 },
+  4: { itemId: 4, name: "全体回復アイテム★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 5, dropRate: 90 },
+  5: { itemId: 5, name: "全体回復アイテム★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 10, dropRate: 50 },
+  6: { itemId: 6, name: "全体回復アイテム★★★", category: "回復", usableInExplore: true, usableInBattle: true, effectType: "HP回復", target: "party", effectValue: 15, dropRate: 20 },
+  7: { itemId: 7, name: "攻撃アイテム★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 10, dropRate: 90 },
+  8: { itemId: 8, name: "攻撃アイテム★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 20, dropRate: 60 },
+  9: { itemId: 9, name: "攻撃アイテム★★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 30, dropRate: 20 },
   10: { itemId: 10, name: "マップの鍵", category: "探索イベント用", usableInExplore: true, usableInBattle: false, effectType: "イベント", target: "none", effectValue: 0 },
 };
+
+// 戦闘勝利時のドロップ候補プール（バランス仕様書「ドロップする場所」列に対応）
+// 雑魚モンスター: ★/★★ティア、ボスモンスター（ラスボス含む）: ★★★ティアのみ
+const MOB_BATTLE_DROP_ITEM_IDS = [1, 2, 4, 5, 7, 8];
+const BOSS_BATTLE_DROP_ITEM_IDS = [3, 6, 9];
 
 // 動作確認用の初期所持アイテム（探索画面側の所持品データが未実装のためのダミー）
 const INITIAL_INVENTORY = [
