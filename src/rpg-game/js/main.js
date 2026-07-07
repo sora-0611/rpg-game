@@ -68,7 +68,6 @@ function switchScene(newSceneName) {
  * ui.jsから参照されるので定義を統一
  */
 const SCENE_TO_SCREEN = {
-  SETTINGS: 'screen-settings',
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
 };
