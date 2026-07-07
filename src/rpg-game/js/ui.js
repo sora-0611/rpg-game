@@ -475,6 +475,36 @@ function initializeUI() {
     });
   }
 
+  const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
+  if (btnMenuUpgrade) {
+    btnMenuUpgrade.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('UPGRADE');
+    });
+  }
+
+  const btnMenuItems = document.getElementById('btn-menu-items');
+  if (btnMenuItems) {
+    btnMenuItems.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      showToast('アイテム画面は未実装です。', 'info');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      window.location.href = '../settings.html?from=explore';
+    });
+  }
+
+  const btnUpgradeBack = document.getElementById('btn-upgrade-back');
+  if (btnUpgradeBack) {
+    btnUpgradeBack.addEventListener('click', () => {
+      window.switchScene('EXPLORE');
+    });
+  }
+
   const btnMenuClose = document.getElementById('btn-menu-close');
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
