@@ -19,16 +19,21 @@ function setGameState(newState) {
 }
 
 function initializeGame() {
-  // ゲーム状態を作成
-  const initialState = STATE.createNewGameState();
-  setGameState(STATE.sanitizeGameState(initialState));
+  // セーブデータがあれば読み込んで再開し、無ければ新規作成する
+  // （戦闘画面からの復帰時は事前にSAVE.saveGameStateされている想定）
+  let initialState = (window.SAVE && SAVE.hasSavedGame()) ? SAVE.loadSavedGameState() : null;
+  if (!initialState) {
+    initialState = STATE.sanitizeGameState(STATE.createNewGameState());
+  }
+  setGameState(initialState);
 
   // UIを初期化
   UI.initializeUI();
-
-  // マップ選択画面から開始
   UI.hideAllScreens();
-  switchScene('MAP_SELECT');
+
+  // 保存されていたシーンから再開する（戦闘画面がEXPLORE/MAP_SELECTを設定して戻ってくる）
+  const resumeScene = SCENE_TO_SCREEN[initialState.scene] ? initialState.scene : 'MAP_SELECT';
+  switchScene(resumeScene);
 }
 
 /**

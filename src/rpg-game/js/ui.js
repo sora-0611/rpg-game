@@ -582,8 +582,16 @@ function handleExploreMove(direction) {
   drawExploreMap(gameState);
 
   if (gameState.battle.isActive) {
-    const enemyId = gameState.battle.currentEnemyId || 'mob1';
-    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(enemyId)}`);
+    // src/battle 側は数値/'mobN'形式の別スキーマの敵IDを使うため変換する。
+    // src/battle/bridge.js の ENEMY_ID_TO_BATTLE と同期を保つこと。
+    const ENEMY_ID_TO_BATTLE = {
+      slime_1: 'mob1', slime_2: 'mob2', slime_3: 'mob3',
+      boss_1: 'boss1', boss_2: 'boss2', final_boss: 'lastboss',
+    };
+    const rpgEnemyId = gameState.battle.currentEnemyId || 'slime_1';
+    const battleEnemyId = ENEMY_ID_TO_BATTLE[rpgEnemyId] || 'mob1';
+    window.SAVE.saveGameState(gameState);
+    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(battleEnemyId)}`);
     return;
   }
 
