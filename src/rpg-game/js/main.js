@@ -19,16 +19,33 @@ function setGameState(newState) {
 }
 
 function initializeGame() {
-  // ゲーム状態を作成
-  const initialState = STATE.createNewGameState();
-  setGameState(STATE.sanitizeGameState(initialState));
+  // セーブデータがあれば読み込んで再開し、無ければ新規作成する
+  // （戦闘画面からの復帰時は事前にSAVE.saveGameStateされている想定）
+  let initialState = (window.SAVE && SAVE.hasSavedGame()) ? SAVE.loadSavedGameState() : null;
+  if (!initialState) {
+    initialState = STATE.sanitizeGameState(STATE.createNewGameState());
+  }
+
+  // 戦闘画面を閉じる等で中断され、battle.isActiveが立ったまま保存されている場合の救済。
+  // 探索画面が起動する時点で本来戦闘中ということはあり得ない
+  // （通常は戦闘画面側がisActiveをfalseに戻してから戻ってくる）ため、ここで強制的に解除する。
+  // isActiveが残っていると registerExploreControls の移動処理がずっとブロックされ、
+  // ボスの位置に固定されたまま動けなくなる不具合につながる。
+  if (initialState.battle && initialState.battle.isActive) {
+    initialState.battle.isActive = false;
+    initialState.battle.enemies = [];
+    initialState.battle.log = [];
+  }
+
+  setGameState(initialState);
 
   // UIを初期化
   UI.initializeUI();
-
-  // マップ選択画面から開始
   UI.hideAllScreens();
-  switchScene('MAP_SELECT');
+
+  // 保存されていたシーンから再開する（戦闘画面がEXPLORE/MAP_SELECTを設定して戻ってくる）
+  const resumeScene = SCENE_TO_SCREEN[initialState.scene] ? initialState.scene : 'MAP_SELECT';
+  switchScene(resumeScene);
 }
 
 /**

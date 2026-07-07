@@ -475,6 +475,36 @@ function initializeUI() {
     });
   }
 
+  const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
+  if (btnMenuUpgrade) {
+    btnMenuUpgrade.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.switchScene('UPGRADE');
+    });
+  }
+
+  const btnMenuItems = document.getElementById('btn-menu-items');
+  if (btnMenuItems) {
+    btnMenuItems.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      showToast('アイテム画面は未実装です。', 'info');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      window.location.href = '../settings.html?from=explore';
+    });
+  }
+
+  const btnUpgradeBack = document.getElementById('btn-upgrade-back');
+  if (btnUpgradeBack) {
+    btnUpgradeBack.addEventListener('click', () => {
+      window.switchScene('EXPLORE');
+    });
+  }
+
   const btnMenuClose = document.getElementById('btn-menu-close');
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
@@ -582,8 +612,16 @@ function handleExploreMove(direction) {
   drawExploreMap(gameState);
 
   if (gameState.battle.isActive) {
-    const enemyId = gameState.battle.currentEnemyId || 'mob1';
-    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(enemyId)}`);
+    // src/battle 側は数値/'mobN'形式の別スキーマの敵IDを使うため変換する。
+    // src/battle/bridge.js の ENEMY_ID_TO_BATTLE と同期を保つこと。
+    const ENEMY_ID_TO_BATTLE = {
+      slime_1: 'mob1', slime_2: 'mob2', slime_3: 'mob3',
+      boss_1: 'boss1', boss_2: 'boss2', final_boss: 'lastboss',
+    };
+    const rpgEnemyId = gameState.battle.currentEnemyId || 'slime_1';
+    const battleEnemyId = ENEMY_ID_TO_BATTLE[rpgEnemyId] || 'mob1';
+    window.SAVE.saveGameState(gameState);
+    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(battleEnemyId)}`);
     return;
   }
 

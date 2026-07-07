@@ -7,7 +7,7 @@ window.addEventListener('title:continue', function () {
 });
 
 window.addEventListener('title:settings', function () {
-  window.location.href = './settings.html';
+  window.location.href = './settings.html?from=title';
 });
 
 RPG.initTitleScreen();
