@@ -5,7 +5,6 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
-  SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
   UPGRADE: 'screen-upgrade',
@@ -318,12 +317,15 @@ function renderExploreScreen(gameState) {
 
   // パーティーステータス更新
   updatePartyStatus(gameState, 'explore');
+  updatePartyStatus(gameState, 'battle');
 
   // 探索マップを描画
   drawExploreMap(gameState);
 
   // メッセージを初期化
-  setMessage('explore-message', 'マップを探索してください。');
+  if (!gameState.battle.isActive) {
+    setMessage('explore-message', 'マップを探索してください。');
+  }
 }
 
 /**
@@ -419,8 +421,6 @@ function handleUpgradeCharacter(charIndex) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
-    case 'SETTINGS':
-      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -438,20 +438,6 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
-  // 設定画面の戻るボタン
-  const btnSettingsBack = document.getElementById('btn-settings-back');
-  if (btnSettingsBack) {
-    btnSettingsBack.addEventListener('click', () => {
-      const lastScene = window.gameState?.lastScene || 'EXPLORE';
-      window.switchScene(lastScene);
-    });
-  }
-
-  // 設定JS初期化
-  if (window.SETTINGS) {
-    window.SETTINGS.initialize();
-  }
-
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -493,29 +479,6 @@ function initializeUI() {
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
       exploreMenu.classList.add('window--hidden');
-    });
-  }
-
-  const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
-  if (btnMenuUpgrade) {
-    btnMenuUpgrade.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      window.switchScene('UPGRADE');
-    });
-  }
-
-  const btnUpgradeBack = document.getElementById('btn-upgrade-back');
-  if (btnUpgradeBack) {
-    btnUpgradeBack.addEventListener('click', () => {
-      window.switchScene('EXPLORE');
-    });
-  }
-
-  const btnMenuSettings = document.getElementById('btn-menu-settings');
-  if (btnMenuSettings) {
-    btnMenuSettings.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      window.switchScene('SETTINGS');
     });
   }
 
@@ -593,7 +556,7 @@ function registerExploreControls() {
  */
 function handleExploreMove(direction) {
   const gameState = window.gameState;
-  if (!gameState || gameState.scene !== 'EXPLORE' || gameState.battle.isActive) {
+  if (!gameState || gameState.scene !== 'EXPLORE') {
     return;
   }
 
@@ -618,9 +581,14 @@ function handleExploreMove(direction) {
   updatePartyStatus(gameState, 'explore');
   drawExploreMap(gameState);
 
-  // 敵遭遇時はメッセージのみ表示（戦闘画面は未実装）
+  if (gameState.battle.isActive) {
+    const enemyId = gameState.battle.currentEnemyId || 'mob1';
+    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(enemyId)}`);
+    return;
+  }
+
   if (result.isEnemy || result.isBoss) {
-    showToast('敵が現れた！（戦闘画面は後続フェーズで実装予定）', 'warning');
+    setMessage('explore-message', '戦闘が開始しました。');
   }
 }
 
