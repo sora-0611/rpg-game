@@ -35,6 +35,22 @@ function initializeGame() {
     initialState.battle.isActive = false;
     initialState.battle.enemies = [];
     initialState.battle.log = [];
+
+    // 中断時の座標はボス等の遭遇マスの上のままになっていることが多く、
+    // そのまま再開すると表示や再遭遇判定がおかしくなるため、隣接する移動可能マスへ1マスずらす
+    if (window.EXPLORE && typeof EXPLORE.canMoveTo === 'function') {
+      const { x, y } = initialState.player.pos;
+      const candidates = [
+        { x: x, y: y - 1 },
+        { x: x, y: y + 1 },
+        { x: x - 1, y: y },
+        { x: x + 1, y: y },
+      ];
+      const nextPos = candidates.find((pos) => EXPLORE.canMoveTo(initialState, pos.x, pos.y));
+      if (nextPos) {
+        initialState.player.pos = nextPos;
+      }
+    }
   }
 
   setGameState(initialState);

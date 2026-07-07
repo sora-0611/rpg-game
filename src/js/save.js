@@ -1,7 +1,10 @@
 var RPG = RPG || {};
 
 RPG.Save = (function () {
-  var SAVE_KEY = 'rpgGameSaveData';
+  // src/rpg-game/js/save.js が実際に使っているセーブキーと同じものを見る。
+  // 以前はここだけ別キー('rpgGameSaveData')・別スキーマを見ており、
+  // 実際の探索/戦闘画面の進行状況と一切連動していなかったため、実データに合わせる。
+  var SAVE_KEY = 'rpg-game-save';
   var SAVE_VERSION = '1.0.0';
 
   function hasSaveData() {
@@ -15,8 +18,8 @@ RPG.Save = (function () {
       var data = JSON.parse(raw);
       return (
         typeof data.version === 'string' &&
-        typeof data.coin === 'number' && data.coin >= 0 &&
-        Array.isArray(data.partyState) &&
+        !!data.player && typeof data.player.coin === 'number' && data.player.coin >= 0 &&
+        Array.isArray(data.party) &&
         Array.isArray(data.inventory) &&
         typeof data.mapProgress === 'object' && data.mapProgress !== null
       );
@@ -34,8 +37,8 @@ RPG.Save = (function () {
       saveId: 'fixed',
       version: SAVE_VERSION,
       playTime: 0,
-      coin: 0,
-      partyState: [],
+      player: { coin: 0, currentMapId: 1, pos: { x: 1, y: 1 } },
+      party: [],
       inventory: [],
       mapProgress: {},
       flags: {},

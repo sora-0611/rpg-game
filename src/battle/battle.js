@@ -627,7 +627,7 @@
   dom.titleConfirmYes.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = true;
     closeMenuWindow();
-    showToast("タイトル画面へ戻りました（デモ）。");
+    window.location.href = "../index.html";
   });
   dom.titleConfirmNo.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = true;
