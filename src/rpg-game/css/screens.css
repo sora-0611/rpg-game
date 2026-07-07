@@ -471,6 +471,111 @@
   margin-top: auto;
 }
 
+/* ===== UPGRADE SCREEN ===== */
+.upgrade-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 900px;
+  height: 90%;
+  max-height: 90vh;
+  padding: var(--space-xl);
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  overflow-y: auto;
+}
+
+.upgrade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+}
+
+.upgrade-header .screen-title {
+  margin-bottom: 0;
+}
+
+.upgrade-coin-display {
+  font-weight: 600;
+  color: var(--color-warning);
+  font-size: var(--font-size-body);
+}
+
+.upgrade-party-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+  flex: 1;
+}
+
+.upgrade-char-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.upgrade-char-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upgrade-level {
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.upgrade-stats {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--color-bg-primary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.upgrade-next-level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background-color: rgba(67, 140, 255, 0.08);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(67, 140, 255, 0.2);
+}
+
+.upgrade-next-level--max {
+  background-color: rgba(255, 209, 102, 0.08);
+  border-color: rgba(255, 209, 102, 0.3);
+  color: var(--color-warning);
+  font-size: var(--font-size-small);
+  text-align: center;
+}
+
+.upgrade-cost {
+  font-size: var(--font-size-small);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.upgrade-bonus {
+  font-size: var(--font-size-small);
+  color: var(--color-success);
+}
+
+@media (max-width: 768px) {
+  .upgrade-party-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== ITEMS WINDOW ===== */
 .items-list {
   display: flex;

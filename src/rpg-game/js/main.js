@@ -71,6 +71,7 @@ const SCENE_TO_SCREEN = {
   SETTINGS: 'screen-settings',
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
+  UPGRADE: 'screen-upgrade',
 };
 
 // ===== INITIALIZATION =====
