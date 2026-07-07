@@ -175,80 +175,9 @@
             ゲーム開始。移動してください。
           </div>
 
-          <div id="battle-transition" class="battle-transition battle-transition--hidden" aria-live="polite">
-            戦闘開始...
-          </div>
         </div>
 
-        <!-- Hamburger Menu (hidden by default) -->
         <div id="explore-menu" class="window window--menu window--hidden">
-        </div>
-
-      <!-- ===== 3. BATTLE SCREEN ===== -->
-      <div id="screen-battle" class="screen screen--hidden">
-        <div class="battle-screen-container">
-          <div class="battle-panel">
-            <div class="battle-panel__header">
-              <span class="battle-badge">戦闘中</span>
-              <h3 id="battle-enemy-name">敵</h3>
-            </div>
-
-            <div class="battle-visual">
-              <div class="card card--enemy battle-enemy-card">
-                <span class="card-name">敵情報</span>
-                <div class="hpbar" id="hpbar-battle-enemy">
-                  <div class="hpbar-fill"></div>
-                </div>
-                <span id="battle-enemy-hp" class="card-hp">0/0</span>
-              </div>
-
-              <div id="battle-party" class="battle-party-list">
-                <div id="battle-char-A" class="card card--character card--status-small">
-                  <span class="card-name">キャラA</span>
-                  <div class="hpbar" id="hpbar-battle-A">
-                    <div class="hpbar-fill"></div>
-                  </div>
-                  <span class="card-hp">20/20</span>
-                </div>
-                <div id="battle-char-B" class="card card--character card--status-small">
-                  <span class="card-name">キャラB</span>
-                  <div class="hpbar" id="hpbar-battle-B">
-                    <div class="hpbar-fill"></div>
-                  </div>
-                  <span class="card-hp">20/20</span>
-                </div>
-                <div id="battle-char-C" class="card card--character card--status-small">
-                  <span class="card-name">キャラC</span>
-                  <div class="hpbar" id="hpbar-battle-C">
-                    <div class="hpbar-fill"></div>
-                  </div>
-                  <span class="card-hp">30/30</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="battle-actions">
-              <button id="btn-battle-fight" class="btn btn--primary">戦う</button>
-              <button id="btn-battle-defend" class="btn btn--secondary">防御</button>
-              <button id="btn-battle-item" class="btn btn--secondary">アイテム</button>
-              <button id="btn-battle-flee" class="btn btn--danger">逃げる</button>
-            </div>
-
-            <div id="battle-log" class="message-window battle-log-window">
-              戦闘開始。コマンドを選択してください。
-            </div>
-          </div>
-
-          <div id="battle-item-window" class="window window--items window--hidden">
-            <h3 class="window-title">アイテム</h3>
-            <div id="battle-item-list" class="items-list"></div>
-            <button id="btn-battle-item-close" class="btn btn--secondary btn--block">閉じる</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hamburger Menu (hidden by default) -->
-      <div id="explore-menu" class="window window--menu window--hidden">
           <h3 class="window-title">メニュー</h3>
           <div class="menu-content">
             <div class="menu-coin-display">
