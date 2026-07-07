@@ -475,6 +475,22 @@ function initializeUI() {
     });
   }
 
+  const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
+  if (btnMenuUpgrade) {
+    btnMenuUpgrade.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.location.href = '../enhancement/index.html';
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      window.location.href = '../settings/index.html';
+    });
+  }
+
   const btnMenuClose = document.getElementById('btn-menu-close');
   if (btnMenuClose && exploreMenu) {
     btnMenuClose.addEventListener('click', () => {
