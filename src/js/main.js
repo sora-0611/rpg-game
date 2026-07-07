@@ -1,9 +1,9 @@
 window.addEventListener('title:start', function () {
-  window.location.href = './rpg-game/index.html';
+  window.location.href = './rpg-game/explore.html';
 });
 
 window.addEventListener('title:continue', function () {
-  window.location.href = './rpg-game/index.html';
+  window.location.href = './rpg-game/explore.html';
 });
 
 window.addEventListener('title:settings', function () {
