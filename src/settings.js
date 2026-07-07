@@ -1,6 +1,6 @@
 const DEFAULT_SETTINGS = {
     bgmVolume: 100,
-    seVolume: 100,
+    //seVolume: 100,SEの実装は時間がかかるので、一旦無しにします.
     textSpeed: 'normal',
     performance: 'high'
 };
@@ -9,9 +9,9 @@ const gameSettings = { ...DEFAULT_SETTINGS };
 window.gameSettings = gameSettings;
 
 const bgmAudio = document.getElementById('bgm-audio');
-const seAudio = document.getElementById('se-audio');
+//const seAudio = document.getElementById('se-audio');
 let isBgmPlaybackStarted = false;
-let isSePlaybackStarted = false;
+//let isSePlaybackStarted = false;
 
 function updateBgmVolume(value) {
     const nextVolume = Number(value);
@@ -38,7 +38,7 @@ function updateBgmVolume(value) {
     }
 }
 
-function updateSeVolume(value) {
+/*function updateSeVolume(value) {
     const nextVolume = Number(value);
     gameSettings.seVolume = nextVolume;
 
@@ -62,7 +62,7 @@ function updateSeVolume(value) {
     } catch (error) {
         console.error('SEの再生に失敗しました:', error);
     }
-}
+}*/
 
 // スライダーの値をリアルタイムで更新
 function updateSliderFill(slider) {
@@ -202,9 +202,9 @@ if (backButton) {
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
         let targetPage = 'index.html';
 
-        if (referrerPage === 'tansaku.html') {
+        if (referrerPage === 'tansaku.html') {// 探索画面から来た場合は探索画面に戻る.
             targetPage = 'tansaku.html';
-        } else if (referrerPage === 'index.html') {
+        } else if (referrerPage === 'index.html') {// タイトル画面から来た場合はタイトル画面に戻る.
             targetPage = 'index.html';
         }
 
