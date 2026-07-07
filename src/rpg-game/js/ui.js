@@ -478,8 +478,7 @@ function initializeUI() {
   const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
   if (btnMenuUpgrade) {
     btnMenuUpgrade.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      window.switchScene('UPGRADE');
+      window.location.href = '../enhancement.html';
     });
   }
 
