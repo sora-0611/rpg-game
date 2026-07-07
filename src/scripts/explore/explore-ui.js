@@ -487,6 +487,7 @@ function initializeUI() {
   if (btnMenuSettings) {
     btnMenuSettings.addEventListener('click', () => {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
+      sessionStorage.setItem('settings-return-target', 'explore');
       window.location.href = '../settings/index.html';
     });
   }

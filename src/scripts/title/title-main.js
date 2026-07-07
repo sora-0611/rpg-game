@@ -7,6 +7,7 @@ window.addEventListener('title:continue', function () {
 });
 
 window.addEventListener('title:settings', function () {
+  sessionStorage.setItem('settings-return-target', 'title');
   window.location.href = '../settings/index.html';
 });
 
