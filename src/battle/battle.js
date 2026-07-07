@@ -341,18 +341,48 @@
     }
   }
 
+  function addInventoryItem(itemId, quantity) {
+    const entry = state.inventory.find((e) => e.itemId === itemId);
+    if (entry) {
+      entry.quantity += quantity;
+    } else {
+      state.inventory.push({ itemId, quantity });
+    }
+  }
+
+  // 敵撃破時のアイテムドロップ抽選（3_詳細設計/4_バランス仕様書.md「アイテム」表に準拠）
+  // スロット数（itemDropCount）分、抽選候補プールから1つ選び、そのアイテム自身のdropRateで成否判定する
+  function rollBattleItemDrops(enemy, slotCount) {
+    const poolIds = enemy.isBoss ? BOSS_BATTLE_DROP_ITEM_IDS : MOB_BATTLE_DROP_ITEM_IDS;
+    const obtainedCounts = {};
+    for (let i = 0; i < slotCount; i++) {
+      const candidateId = poolIds[Math.floor(Math.random() * poolIds.length)];
+      const candidate = ITEM_MASTER[candidateId];
+      if (Math.random() * 100 < candidate.dropRate) {
+        addInventoryItem(candidateId, 1);
+        obtainedCounts[candidateId] = (obtainedCounts[candidateId] || 0) + 1;
+      }
+    }
+    return obtainedCounts;
+  }
+
   // ---------- 勝敗 ----------
   function onVictory() {
     state.phase = "VICTORY";
     const enemy = state.enemy;
     const coin = Math.random() < enemy.coinDropRate ? enemy.coinDrop : 0;
     const [minDrop, maxDrop] = enemy.itemDropCount;
-    const itemCount = Math.random() < enemy.itemDropRate
+    const slotCount = Math.random() < enemy.itemDropRate
       ? minDrop + Math.floor(Math.random() * (maxDrop - minDrop + 1))
       : 0;
+    const obtainedCounts = rollBattleItemDrops(enemy, slotCount);
+
     let resultText = `${enemy.name}を倒した。`;
     if (coin > 0) resultText += ` コインを${coin}枚手に入れた。`;
-    if (itemCount > 0) resultText += ` アイテムを${itemCount}個手に入れた。`;
+    const obtainedNames = Object.keys(obtainedCounts).map(
+      (id) => `${ITEM_MASTER[id].name}×${obtainedCounts[id]}`
+    );
+    if (obtainedNames.length > 0) resultText += ` ${obtainedNames.join("、")}を手に入れた。`;
     logMessage(resultText);
     renderAll();
   }
