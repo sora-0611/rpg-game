@@ -25,6 +25,18 @@ function initializeGame() {
   if (!initialState) {
     initialState = STATE.sanitizeGameState(STATE.createNewGameState());
   }
+
+  // 戦闘画面を閉じる等で中断され、battle.isActiveが立ったまま保存されている場合の救済。
+  // 探索画面が起動する時点で本来戦闘中ということはあり得ない
+  // （通常は戦闘画面側がisActiveをfalseに戻してから戻ってくる）ため、ここで強制的に解除する。
+  // isActiveが残っていると registerExploreControls の移動処理がずっとブロックされ、
+  // ボスの位置に固定されたまま動けなくなる不具合につながる。
+  if (initialState.battle && initialState.battle.isActive) {
+    initialState.battle.isActive = false;
+    initialState.battle.enemies = [];
+    initialState.battle.log = [];
+  }
+
   setGameState(initialState);
 
   // UIを初期化
