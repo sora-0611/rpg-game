@@ -70,6 +70,7 @@ function switchScene(newSceneName) {
 const SCENE_TO_SCREEN = {
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
+  UPGRADE: 'screen-upgrade',
 };
 
 // ===== INITIALIZATION =====
