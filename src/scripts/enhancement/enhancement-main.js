@@ -147,7 +147,7 @@ function renderAllCards() {
 function setupBackButton() {
     const backButton = document.querySelector('.back-button');
     backButton.addEventListener('click', () => {
-        window.location.href='tansaku.html'; // 探索画面のファイル名がtansaku.htmlである体で書いています。必要であれば修正してください。
+        window.location.href='../explore/index.html';
     });
 }
 

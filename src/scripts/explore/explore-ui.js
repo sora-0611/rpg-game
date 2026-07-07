@@ -488,7 +488,7 @@ function initializeUI() {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
       const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
       if (confirmed) {
-        window.location.href = '../index.html';
+        window.location.href = '../title/index.html';
       }
     });
   }
