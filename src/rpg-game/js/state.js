@@ -5,6 +5,28 @@
  */
 
 /**
+ * 強化段階1から指定段階までのボーナスを累積合計する
+ * （各段階のhpBonus/attackBonus/defenseBonusは「その段階に上がった時の増分」を表すため、
+ * 現在の段階の値だけでなく1段階目からの合計を適用する必要がある）
+ * @param {string} characterId
+ * @param {number} enhanceLevel
+ * @param {string} bonusKey 'hpBonus' | 'attackBonus' | 'defenseBonus'
+ * @return {number}
+ */
+function getCumulativeEnhanceBonus(characterId, enhanceLevel, bonusKey) {
+  const enhanceCost = DATA.ENHANCE_COSTS[characterId];
+  if (!enhanceCost) return 0;
+
+  let total = 0;
+  for (let level = 1; level <= enhanceLevel; level++) {
+    if (enhanceCost[level]) {
+      total += enhanceCost[level][bonusKey];
+    }
+  }
+  return total;
+}
+
+/**
  * キャラクターの最大HPを計算
  * @param {string} characterId
  * @param {number} enhanceLevel
@@ -22,11 +44,8 @@ function calculateMaxHp(characterId, enhanceLevel = 1) {
   const equipment = DATA.EQUIPMENTS[character.baseEquipmentId];
   let maxHp = character.baseHp + (equipment ? equipment.baseHp : 0);
 
-  // 強化レベル毎のボーナス
-  const enhanceCost = DATA.ENHANCE_COSTS[characterId];
-  if (enhanceCost && enhanceCost[enhanceLevel]) {
-    maxHp += enhanceCost[enhanceLevel].hpBonus;
-  }
+  // 強化レベル毎のボーナス（1段階目から累積）
+  maxHp += getCumulativeEnhanceBonus(characterId, enhanceLevel, 'hpBonus');
 
   return Math.max(1, maxHp);
 }
@@ -48,10 +67,7 @@ function calculateAttack(characterId, enhanceLevel = 1) {
   const equipment = DATA.EQUIPMENTS[character.baseEquipmentId];
   let attack = character.baseAttack + (equipment ? equipment.baseAttack : 0);
 
-  const enhanceCost = DATA.ENHANCE_COSTS[characterId];
-  if (enhanceCost && enhanceCost[enhanceLevel]) {
-    attack += enhanceCost[enhanceLevel].attackBonus;
-  }
+  attack += getCumulativeEnhanceBonus(characterId, enhanceLevel, 'attackBonus');
 
   return Math.max(1, attack);
 }
@@ -73,10 +89,7 @@ function calculateDefense(characterId, enhanceLevel = 1) {
   const equipment = DATA.EQUIPMENTS[character.baseEquipmentId];
   let defense = character.baseDefense + (equipment ? equipment.baseDefense : 0);
 
-  const enhanceCost = DATA.ENHANCE_COSTS[characterId];
-  if (enhanceCost && enhanceCost[enhanceLevel]) {
-    defense += enhanceCost[enhanceLevel].defenseBonus;
-  }
+  defense += getCumulativeEnhanceBonus(characterId, enhanceLevel, 'defenseBonus');
 
   return Math.max(0, defense);
 }
@@ -470,7 +483,7 @@ function upgradeCharacter(state, characterIndex) {
   character.hpMax = newStats.hpMax;
   character.attack = newStats.attack;
   character.defense = newStats.defense;
-  character.hpCurrent = Math.min(character.hpCurrent, character.hpMax);
+  character.hpCurrent = character.hpMax; // 強化時はHPを満タンまで回復させる
 
   return true;
 }
