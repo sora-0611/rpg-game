@@ -16,9 +16,14 @@ function formatStars(level) {
     return Array.from({ length: level }, () => '★').join('');
 }
 
+// 数値を桁区切り（1,000等）にフォーマットして返します。
+function formatCoin(amount) {
+    return amount.toLocaleString('ja-JP');
+}
+
 // コインの表示部分を最新のコイン数に更新します。
 function updateCoinDisplay() {
-    coinValue.textContent = String(gameState.player.coin);
+    coinValue.textContent = formatCoin(gameState.player.coin);
 }
 
 // 1人分のキャラクターカードを作って返す関数です。
@@ -42,7 +47,8 @@ function renderCard(character, index) {
         : canUpgrade
             ? `強化で Lv.${character.enhanceLevel} → Lv.${character.enhanceLevel + 1}`
             : reason;
-    const statusClass = isMax ? 'card-status success' : canUpgrade ? 'card-status' : 'card-status alert';
+    // コイン不足で強化できない場合はWarning状態として表示する
+    const statusClass = isMax ? 'card-status success' : canUpgrade ? 'card-status' : 'card-status warning';
 
     // 強化ボタンを作成します。
     const button = document.createElement('button');
@@ -51,7 +57,7 @@ function renderCard(character, index) {
     button.disabled = isMax || !canUpgrade;
     button.innerHTML = isMax
         ? buttonText
-        : `${buttonText} <span class="enhance-cost"><span class="coin-icon">🪙</span>${nextCost.coin}</span>`;
+        : `${buttonText} <span class="enhance-cost"><span class="coin-icon">🪙</span>${formatCoin(nextCost.coin)}</span>`;
 
     // ボタンが押されたときの処理です。
     button.addEventListener('click', () => {
