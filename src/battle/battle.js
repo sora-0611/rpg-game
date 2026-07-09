@@ -674,7 +674,7 @@
   dom.menuButton.addEventListener("click", openMenuWindow);
   dom.menuCloseButton.addEventListener("click", closeMenuWindow);
   dom.menuSettingsButton.addEventListener("click", () => {
-    showToast("設定画面は未実装です。");
+    window.location.href = "../settings.html?from=battle";
   });
 
   // ---------- 起動 ----------
