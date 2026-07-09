@@ -255,6 +255,18 @@
   color: var(--color-text-primary);
 }
 
+.window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.window-header .window-title {
+  margin-bottom: 0;
+}
+
 .window--menu {
   position: absolute;
   right: var(--space-lg);
@@ -296,9 +308,40 @@
   z-index: 200;
 }
 
+.dialog-container {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 400;
+  pointer-events: auto;
+}
+
+.dialog {
+  width: min(90vw, var(--dialog-width));
+  max-width: var(--dialog-width);
+  background-color: var(--color-bg-surface-elevated);
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
 .dialog-message {
   margin-bottom: var(--space-lg);
   font-size: var(--font-size-body);
+  line-height: 1.6;
+  color: var(--color-text-primary);
 }
 
 .dialog-buttons {
