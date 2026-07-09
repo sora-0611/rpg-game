@@ -13,7 +13,6 @@
 
   // ---------- DOM参照 ----------
   const dom = {
-    menuButton: document.getElementById("menu-button"),
     enemyBox: document.getElementById("enemy-box"),
     enemyAvatar: document.getElementById("enemy-avatar"),
     enemyName: document.getElementById("enemy-name"),
@@ -21,11 +20,13 @@
     enemyStatsLine: document.getElementById("enemy-stats-line"),
     enemyHpFill: document.getElementById("enemy-hp-fill"),
     enemyHpValue: document.getElementById("enemy-hp-value"),
+    enemyHpBlock: document.getElementById("enemy-hp-block"),
     playerAvatar: document.getElementById("player-avatar"),
     playerName: document.getElementById("player-name"),
     playerStatsLine: document.getElementById("player-stats-line"),
     playerHpFill: document.getElementById("player-hp-fill"),
     playerHpValue: document.getElementById("player-hp-value"),
+    playerHpBlock: document.getElementById("player-hp-block"),
     partyStatus: document.getElementById("party-status"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
@@ -43,13 +44,6 @@
     fleeYesButton: document.getElementById("flee-yes-button"),
     fleeNoButton: document.getElementById("flee-no-button"),
     fleeCloseButton: document.getElementById("flee-close-button"),
-    menuWindow: document.getElementById("menu-window"),
-    menuTitleButton: document.getElementById("menu-title-button"),
-    menuSettingsButton: document.getElementById("menu-settings-button"),
-    menuCloseButton: document.getElementById("menu-close-button"),
-    titleConfirmScrim: document.getElementById("title-confirm-scrim"),
-    titleConfirmYes: document.getElementById("title-confirm-yes"),
-    titleConfirmNo: document.getElementById("title-confirm-no"),
     toast: document.getElementById("toast"),
   };
 
@@ -113,11 +107,29 @@
       state.pendingItemId = null;
       hideConfirm();
       closeAllWindows();
+      // 戦闘データが正しく揃ったのでHPバーを表示する（前回失敗時に非表示にした分を戻す）
+      dom.enemyHpBlock.hidden = false;
+      dom.playerHpBlock.hidden = false;
       startPlayerRound();
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
-      logMessage("セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？");
+      // 戦闘データがない状態: HPバーは表示する情報が無いため非表示にする
+      dom.enemyHpBlock.hidden = true;
+      dom.playerHpBlock.hidden = true;
+      showConfirm(
+        "セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？",
+        () => {
+          if (window.BRIDGE) {
+            BRIDGE.clearRawGameState();
+          }
+          hideConfirm();
+          startBattle(enemyId);
+        },
+        () => {
+          hideConfirm();
+        }
+      );
     }
   }
 
@@ -507,23 +519,10 @@
     dom.confirmButtons.hidden = true;
   }
 
-  // ---------- メニュー / トースト ----------
+  // ---------- トースト ----------
   function closeAllWindows() {
     dom.itemWindow.hidden = true;
     dom.fleeWindow.hidden = true;
-    dom.menuWindow.hidden = true;
-    dom.titleConfirmScrim.hidden = true;
-    dom.menuButton.hidden = false;
-  }
-
-  function openMenuWindow() {
-    dom.menuWindow.hidden = false;
-    dom.menuButton.hidden = true;
-  }
-
-  function closeMenuWindow() {
-    dom.menuWindow.hidden = true;
-    dom.menuButton.hidden = false;
   }
 
   function showToast(message) {
@@ -655,23 +654,6 @@
   dom.fleeYesButton.addEventListener("click", handleFleeYes);
   dom.fleeNoButton.addEventListener("click", handleFleeNo);
   dom.fleeCloseButton.addEventListener("click", closeFleeWindow);
-
-  dom.menuButton.addEventListener("click", openMenuWindow);
-  dom.menuCloseButton.addEventListener("click", closeMenuWindow);
-  dom.menuTitleButton.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = false;
-  });
-  dom.menuSettingsButton.addEventListener("click", () => {
-    showToast("設定画面は未実装です。");
-  });
-  dom.titleConfirmYes.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = true;
-    closeMenuWindow();
-    window.location.href = "../index.html";
-  });
-  dom.titleConfirmNo.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = true;
-  });
 
   // ---------- 起動 ----------
   // ?enemy=boss1 のようにクエリ指定で出現敵を固定できる（探索画面からの遷移を想定したフック）
