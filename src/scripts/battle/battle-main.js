@@ -120,7 +120,7 @@
     }
 
     window.setTimeout(() => {
-      window.location.href = '../explore/index.html';
+      window.location.href = '../explore/explore-page.html';
     }, 500);
   }
 

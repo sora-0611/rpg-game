@@ -3,10 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="refresh" content="0; url=./pages/title/index.html" />
   <title>RPG GAME</title>
+  <link rel="stylesheet" href="./styles/shared/style.css" />
+  <link rel="stylesheet" href="./styles/shared/loading.css" />
 </head>
 <body>
-  <p>ページを読み込んでいます…</p>
+  <div id="app" class="game-container">
+    <section id="screen-loading" class="screen">
+      <p class="loading-text">Now loading...</p>
+    </section>
+  </div>
+
+  <script src="./scripts/title/title-screen-manager.js"></script>
+  <script src="./scripts/title/screens/loading.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      RPG.initLoadingScreen({
+        onFinished: function () {
+          window.location.href = './pages/title/title-page.html';
+        }
+      });
+    });
+  </script>
 </body>
 </html>

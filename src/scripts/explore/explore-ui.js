@@ -491,7 +491,7 @@ function initializeUI() {
   if (btnMenuUpgrade) {
     btnMenuUpgrade.addEventListener('click', () => {
       setExploreMenuVisible(false);
-      window.location.href = '../enhancement/index.html';
+      window.location.href = '../enhancement/enhancement-page.html';
     });
   }
 
@@ -554,7 +554,7 @@ function initializeUI() {
     btnMenuSettings.addEventListener('click', () => {
       setExploreMenuVisible(false);
       sessionStorage.setItem('settings-return-target', 'explore');
-      window.location.href = '../settings/index.html';
+      window.location.href = '../settings/settings-page.html';
     });
   }
 
@@ -576,7 +576,7 @@ function initializeUI() {
       toggleExploreItemWindow(false);
       const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
       if (confirmed) {
-        window.location.href = '../title/index.html';
+        window.location.href = '../title/title-page.html';
       }
     });
   }
@@ -671,7 +671,7 @@ function handleExploreMove(direction) {
 
   if (gameState.battle.isActive) {
     const enemyId = gameState.battle.currentEnemyId || 'mob1';
-    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(enemyId)}`);
+    window.location.assign(`../battle/battle-page.html?enemy=${encodeURIComponent(enemyId)}`);
     return;
   }
 

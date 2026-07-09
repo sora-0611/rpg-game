@@ -196,16 +196,16 @@ if (backButton) {
         const referrerUrl = referrer ? new URL(referrer, window.location.href) : null;
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
 
-        let targetPage = '../title/index.html';
+        let targetPage = '../title/title-page.html';
 
         if (storedReturnTarget === 'explore') {
-            targetPage = '../explore/index.html';
+            targetPage = '../explore/explore-page.html';
         } else if (storedReturnTarget === 'title') {
-            targetPage = '../title/index.html';
+            targetPage = '../title/title-page.html';
         } else if (referrerPage === 'index.html' && referrerUrl && referrerUrl.pathname.includes('/explore/')) {
-            targetPage = '../explore/index.html';
+            targetPage = '../explore/explore-page.html';
         } else if (referrerUrl && referrerUrl.pathname.includes('/title/')) {
-            targetPage = '../title/index.html';
+            targetPage = '../title/title-page.html';
         }
 
         window.location.href = targetPage;

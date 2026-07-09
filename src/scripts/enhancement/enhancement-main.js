@@ -169,7 +169,7 @@ function renderAllCards() {
 function setupBackButton() {
     const backButton = document.querySelector('.back-button');
     backButton.addEventListener('click', () => {
-        window.location.href='../explore/index.html';
+        window.location.href='../explore/explore-page.html';
     });
 }
 
