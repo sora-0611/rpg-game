@@ -119,7 +119,7 @@ function showToast(text, type = 'info', duration = 3000) {
  * @param {string} message
  * @return {Promise<boolean>}
  */
-function showConfirmDialog(message) {
+function showConfirmDialog(message, confirmLabel = 'OK', cancelLabel = 'キャンセル') {
   return new Promise(resolve => {
     const container = document.getElementById('dialog-container');
     if (!container) {
@@ -133,8 +133,8 @@ function showConfirmDialog(message) {
       <div class="dialog">
         <p class="dialog-message">${message}</p>
         <div class="dialog-buttons">
-          <button class="btn btn--primary dialog-btn-confirm">OK</button>
-          <button class="btn btn--secondary dialog-btn-cancel">キャンセル</button>
+          <button class="btn btn--primary dialog-btn-confirm">${confirmLabel}</button>
+          <button class="btn btn--secondary dialog-btn-cancel">${cancelLabel}</button>
         </div>
       </div>
     `;
@@ -322,10 +322,80 @@ function renderExploreScreen(gameState) {
   // 探索マップを描画
   drawExploreMap(gameState);
 
+  renderExploreItemWindow(gameState);
+
   // メッセージを初期化
   if (!gameState.battle.isActive) {
     setMessage('explore-message', 'マップを探索してください。');
   }
+}
+
+function renderExploreItemWindow(gameState) {
+  const itemWindow = document.getElementById('explore-item-window');
+  const itemList = document.getElementById('explore-item-list');
+  if (!itemWindow || !itemList) return;
+
+  itemWindow.classList.toggle('window--hidden', !gameState.ui.itemWindowOpen);
+
+  if (!gameState.ui.itemWindowOpen) {
+    return;
+  }
+
+  const inventoryItems = window.ITEM?.getInventoryItems ? window.ITEM.getInventoryItems(gameState) : [];
+  itemList.innerHTML = '';
+
+  if (inventoryItems.length === 0) {
+    itemList.innerHTML = '<div class="message-window">アイテムを所持していません。</div>';
+    return;
+  }
+
+  inventoryItems.forEach(item => {
+    const itemData = item.data;
+    const isUsable = Boolean(itemData && itemData.usableInExplore);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `item-card${isUsable ? '' : ' item-card--disabled'}`;
+    button.disabled = !isUsable;
+    button.innerHTML = `
+      <div class="item-info">
+        <span class="item-name">${itemData?.name || '不明なアイテム'}</span>
+        <span class="item-effect">${itemData?.description || ''}</span>
+      </div>
+      <span class="item-quantity">×${item.quantity}</span>
+    `;
+
+    button.addEventListener('click', () => {
+      if (!itemData || !isUsable) {
+        showToast('このアイテムは探索中に使えません。', 'error');
+        return;
+      }
+
+      const result = window.ITEM.applyItemEffectInExplore(gameState, item.itemId);
+      if (result.success) {
+        showToast(result.message, 'success');
+        renderExploreScreen(gameState);
+      } else {
+        showToast(result.message, 'error');
+      }
+    });
+
+    itemList.appendChild(button);
+  });
+}
+
+function openExploreItemWindow(gameState) {
+  gameState.ui.menuOpen = false;
+  gameState.ui.itemWindowOpen = true;
+  renderExploreItemWindow(gameState);
+  const exploreMenu = document.getElementById('explore-menu');
+  if (exploreMenu) {
+    exploreMenu.classList.add('window--hidden');
+  }
+}
+
+function closeExploreItemWindow(gameState) {
+  gameState.ui.itemWindowOpen = false;
+  renderExploreItemWindow(gameState);
 }
 
 /**
@@ -490,8 +560,10 @@ function initializeUI() {
   const btnMenuItems = document.getElementById('btn-menu-items');
   if (btnMenuItems) {
     btnMenuItems.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      showToast('アイテム画面は未実装です。', 'info');
+      const gameState = window.gameState;
+      if (gameState) {
+        openExploreItemWindow(gameState);
+      }
     });
   }
 
@@ -516,13 +588,31 @@ function initializeUI() {
     });
   }
 
+  const btnItemWindowClose = document.getElementById('btn-item-window-close');
+  if (btnItemWindowClose) {
+    btnItemWindowClose.addEventListener('click', () => {
+      const gameState = window.gameState;
+      if (gameState) {
+        closeExploreItemWindow(gameState);
+      }
+    });
+  }
+
   const btnMenuTitle = document.getElementById('btn-menu-title');
   if (btnMenuTitle) {
     btnMenuTitle.addEventListener('click', async () => {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      const confirmed = await showConfirmDialog('タイトルに戻りますか？\n（保存されていない進捗は失われます）');
+
+      const saveSucceeded = window.SAVE?.saveGameState ? window.SAVE.saveGameState(window.gameState) : false;
+      if (saveSucceeded) {
+        showToast('セーブしました。', 'success');
+      } else {
+        showToast('セーブに失敗しました。', 'error');
+      }
+
+      const confirmed = await showConfirmDialog('タイトルに戻りますか？', 'はい', 'いいえ');
       if (confirmed) {
-        window.location.href = '../index.html';
+        window.location.assign('../index.html');
       }
     });
   }
