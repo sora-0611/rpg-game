@@ -47,12 +47,17 @@
 
   <!-- コマンド: 戦う/防御/アイテム/逃げる -->
   <section class="command-area" id="command-area">
-    <button class="command-button" id="btn-fight">戦う</button>
-    <button class="command-button" id="btn-item">アイテム</button>
-    <button class="command-button" id="btn-defend">防御</button>
-    <button class="command-button" id="btn-flee">逃げる</button>
-    <button class="command-button command-end" id="btn-end" hidden disabled>戦闘終了</button>
+    <div class="command-buttons">
+      <button class="command-button" id="btn-fight">戦う</button>
+      <button class="command-button" id="btn-item">アイテム</button>
+      <button class="command-button" id="btn-defend">防御</button>
+      <button class="command-button" id="btn-flee">逃げる</button>
+      <button class="command-button command-end" id="btn-end" hidden disabled>戦闘終了</button>
+    </div>
   </section>
+
+  <!-- パーティ全員のHP・状態一覧（行動中キャラだけでなく全員を常時表示する）。コマンドエリアとは独立して固定位置に表示 -->
+  <ul class="party-status" id="party-status"></ul>
 
   <!-- テキストウィンドウ: イベントテキスト / 確認はい・いいえ -->
   <section class="message-window" id="message-window" aria-live="polite">
