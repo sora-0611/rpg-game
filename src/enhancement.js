@@ -1,43 +1,11 @@
-// 強化画面で表示するパーティーデータをまとめた変数です。
-// ここでは「キャラクターが持っている武器」を強化する動きを表現しています。
-const partyData = [
-    {
-        id: 'A',
-        name: 'キャラクターA',
-        weapon: {
-            name: 'ロングソード',// 武器名は仮称です。
-            icon: '⚔️',
-            level: 1,
-            maxLevel: 3,
-            cost: 20,
-        },
-    },
-    {
-        id: 'B',
-        name: 'キャラクターB',
-        weapon: {
-            name: 'マジックスタッフ',// 武器名は仮称です。
-            icon: '🔮',
-            level: 1,
-            maxLevel: 3,
-            cost: 20,
-        },
-    },
-    {
-        id: 'C',
-        name: 'キャラクターC',
-        weapon: {
-            name: 'ハンター弓',// 武器名は仮称です。
-            icon: '🏹',
-            level: 1,
-            maxLevel: 3,
-            cost: 20,
-        },
-    }
-];
+// 実際の進行状況（コイン・パーティーの強化状態）を rpg-game 側のセーブデータから読み込んで表示します。
+const gameState = (window.SAVE && SAVE.hasSavedGame())
+    ? SAVE.loadSavedGameState()
+    : STATE.sanitizeGameState(STATE.createNewGameState());
 
-// ゲーム内で使えるコインの総数です。画面の上部に表示されます。
-let coins = 400; // コインの初期値(マジックナンバー)です。後で修正が必要です。
+// キャラクターの装備タイプに応じたアイコン表示です。
+const EQUIPMENT_ICONS = { sword: '⚔️', staff: '🔮', bow: '🏹' };
+
 // HTML の要素を JavaScript から扱えるように取得しています。
 const coinValue = document.getElementById('coinValue');
 const enhanceGrid = document.getElementById('enhanceGrid');
@@ -50,53 +18,50 @@ function formatStars(level) {
 
 // コインの表示部分を最新のコイン数に更新します。
 function updateCoinDisplay() {
-    coinValue.textContent = String(coins);
+    coinValue.textContent = String(gameState.player.coin);
 }
 
-// 1つのキャラクターの武器カードを作って返す関数です。
-function renderCard(card) {
-    const weapon = card.weapon;
-    const isMax = weapon.level >= weapon.maxLevel; // 武器が最大強化かどうか
-    const canAfford = coins >= weapon.cost && weapon.cost > 0; // コインが足りているか
+// 1人分のキャラクターカードを作って返す関数です。
+// @param {Object} character gameState.party の1要素
+// @param {number} index gameState.party 内でのインデックス
+function renderCard(character, index) {
+    const charData = DATA.CHARACTERS[character.characterId];
+    const equipment = DATA.EQUIPMENTS[charData.baseEquipmentId];
+    const icon = EQUIPMENT_ICONS[equipment && equipment.type] || '⭐';
+
+    const isMax = character.enhanceLevel >= DATA.CONSTANTS.MAX_ENHANCE_LEVEL;
+    const { canUpgrade, reason } = STATE.canUpgradeCharacter(gameState, index);
+    const nextCost = !isMax ? DATA.ENHANCE_COSTS[character.characterId][character.enhanceLevel + 1] : null;
+
     const buttonText = isMax ? 'これ以上強化できません' : '強化';
     const buttonClass = isMax ? 'enhance-button enhance-busy' : 'enhance-button enhance-normal';
-    const buttonDisabled = isMax || !canAfford; // 押せない状態かどうか
 
     // カード下部に表示するメッセージを決めています。
     const statusText = isMax
-        ? '武器は最大強化済み'
-        : !canAfford
-            ? 'コインが足りません。'
-            : `武器強化で★${weapon.level} → ★${weapon.level + 1}`;
-    const statusClass = isMax ? 'card-status success' : !canAfford ? 'card-status alert' : 'card-status';
+        ? 'キャラクターは最大強化済み'
+        : canUpgrade
+            ? `強化で Lv.${character.enhanceLevel} → Lv.${character.enhanceLevel + 1}`
+            : reason;
+    const statusClass = isMax ? 'card-status success' : canUpgrade ? 'card-status' : 'card-status alert';
 
     // 強化ボタンを作成します。
     const button = document.createElement('button');
     button.type = 'button';
     button.className = buttonClass;
-    button.disabled = buttonDisabled;
+    button.disabled = isMax || !canUpgrade;
     button.innerHTML = isMax
         ? buttonText
-        : `${buttonText} <span class="enhance-cost"><span class="coin-icon">🪙</span>${weapon.cost}</span>`;
+        : `${buttonText} <span class="enhance-cost"><span class="coin-icon">🪙</span>${nextCost.coin}</span>`;
 
     // ボタンが押されたときの処理です。
     button.addEventListener('click', () => {
-        if (isMax || !canAfford) return; // 押せない場合は何もしません。
+        if (!STATE.canUpgradeCharacter(gameState, index).canUpgrade) return;
 
-        // コインを減らして武器の強化レベルを上げます。
-        coins -= weapon.cost;
-        weapon.level = Math.min(weapon.level + 1, weapon.maxLevel);
+        STATE.upgradeCharacter(gameState, index);
+        SAVE.saveGameState(gameState);
 
-        // 最大強化になったら以降の強化コストを0にします。
-        if (weapon.level === weapon.maxLevel) {
-            weapon.cost = 0;
-        } else {
-            // まだ強化できる場合は次の強化コストを上げます。
-            weapon.cost = Math.floor(weapon.cost * 10);
-        }
-
-        updateCoinDisplay(); // コイン表示を更新
-        renderAllCards(); // カード全体を再描画
+        updateCoinDisplay();
+        renderAllCards();
     });
 
     // カード全体の見た目を作っています。
@@ -105,32 +70,29 @@ function renderCard(card) {
     cardElem.innerHTML = `
         <div class="card-header">
             <div class="card-title">
-                <strong>${card.name}</strong>
-                <span class="card-meta">武器: ${weapon.name}</span>
+                <strong>${charData.name}</strong>
+                <span class="card-meta">HP:${character.hpMax} 攻撃:${character.attack} 防御:${character.defense}</span>
             </div>
             <div class="rank-badge">
-                <span class="rank-stars">${formatStars(weapon.level)}</span>
-                <span>${weapon.level}/${weapon.maxLevel}</span>
+                <span class="rank-stars">${formatStars(character.enhanceLevel)}</span>
+                <span>${character.enhanceLevel}/${DATA.CONSTANTS.MAX_ENHANCE_LEVEL}</span>
             </div>
         </div>
         <div class="card-frame">
-            <span class="card-icon">${weapon.icon}</span>
+            <span class="card-icon">${icon}</span>
         </div>
         <div class="card-footer">
             <span class="${statusClass}">${statusText}</span>
         </div>
     `;
 
-    // もし最大強化の場合は、カードにオーバーレイで「これ以上強化できません」を表示します。
+    // 最大強化の場合は、カードにオーバーレイで「これ以上強化できません」を表示します。
     if (isMax) {
         const overlay = document.createElement('div');
         overlay.className = 'status-overlay';
         overlay.textContent = 'これ以上強化できません。';
         cardElem.appendChild(overlay);
-    }
-
-    // 最大強化でなければ強化ボタンをカードに追加します。
-    if (!isMax) {
+    } else {
         cardElem.appendChild(button);
     }
 
@@ -140,7 +102,7 @@ function renderCard(card) {
 // 画面にあるすべてのカードを作り直して表示します。
 function renderAllCards() {
     enhanceGrid.innerHTML = ''; // まず古いカードを消します。
-    partyData.forEach(card => enhanceGrid.appendChild(renderCard(card)));
+    gameState.party.forEach((character, index) => enhanceGrid.appendChild(renderCard(character, index)));
 }
 
 // 戻るボタンの設定です。
