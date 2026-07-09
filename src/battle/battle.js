@@ -13,7 +13,6 @@
 
   // ---------- DOM参照 ----------
   const dom = {
-    menuButton: document.getElementById("menu-button"),
     enemyBox: document.getElementById("enemy-box"),
     enemyAvatar: document.getElementById("enemy-avatar"),
     enemyName: document.getElementById("enemy-name"),
@@ -45,9 +44,6 @@
     fleeYesButton: document.getElementById("flee-yes-button"),
     fleeNoButton: document.getElementById("flee-no-button"),
     fleeCloseButton: document.getElementById("flee-close-button"),
-    menuWindow: document.getElementById("menu-window"),
-    menuSettingsButton: document.getElementById("menu-settings-button"),
-    menuCloseButton: document.getElementById("menu-close-button"),
     toast: document.getElementById("toast"),
   };
 
@@ -523,22 +519,10 @@
     dom.confirmButtons.hidden = true;
   }
 
-  // ---------- メニュー / トースト ----------
+  // ---------- トースト ----------
   function closeAllWindows() {
     dom.itemWindow.hidden = true;
     dom.fleeWindow.hidden = true;
-    dom.menuWindow.hidden = true;
-    dom.menuButton.hidden = false;
-  }
-
-  function openMenuWindow() {
-    dom.menuWindow.hidden = false;
-    dom.menuButton.hidden = true;
-  }
-
-  function closeMenuWindow() {
-    dom.menuWindow.hidden = true;
-    dom.menuButton.hidden = false;
   }
 
   function showToast(message) {
@@ -670,12 +654,6 @@
   dom.fleeYesButton.addEventListener("click", handleFleeYes);
   dom.fleeNoButton.addEventListener("click", handleFleeNo);
   dom.fleeCloseButton.addEventListener("click", closeFleeWindow);
-
-  dom.menuButton.addEventListener("click", openMenuWindow);
-  dom.menuCloseButton.addEventListener("click", closeMenuWindow);
-  dom.menuSettingsButton.addEventListener("click", () => {
-    window.location.href = "../settings.html?from=battle";
-  });
 
   // ---------- 起動 ----------
   // ?enemy=boss1 のようにクエリ指定で出現敵を固定できる（探索画面からの遷移を想定したフック）

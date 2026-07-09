@@ -139,8 +139,6 @@ if (backButton) {
 
         if (fromParam === 'explore') {
             targetPage = './rpg-game/explore.html';
-        } else if (fromParam === 'battle') {
-            targetPage = './battle/index.html';
         } else if (fromParam === 'title') {
             targetPage = 'index.html';
         } else if (referrerPage === 'tansaku.html') {
