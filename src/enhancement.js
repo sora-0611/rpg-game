@@ -151,7 +151,23 @@ function setupBackButton() {
     });
 }
 
+function applyStoredSettingsToEnhancement() {
+    const storedSettings = window.settingsStore?.getSettings ? window.settingsStore.getSettings() : null;
+    if (!storedSettings) {
+        return;
+    }
+
+    if (typeof window.bgmManager?.setVolume === 'function') {
+        window.bgmManager.setVolume(storedSettings.bgmVolume);
+    }
+
+    if (window.settingsStore?.applySettings) {
+        window.settingsStore.applySettings(storedSettings);
+    }
+}
+
 // 最初に画面を表示するための処理です。
 updateCoinDisplay();
 renderAllCards();
 setupBackButton();
+applyStoredSettingsToEnhancement();

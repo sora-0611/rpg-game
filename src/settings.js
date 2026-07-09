@@ -1,21 +1,25 @@
 const DEFAULT_SETTINGS = {
     bgmVolume: 100,
-    //seVolume: 100,SEの実装は時間がかかるので、一旦無しにします.
-    textSpeed: 'normal',
-    performance: 'high'
+    fullscreen: false
 };
 
-const gameSettings = { ...DEFAULT_SETTINGS };
+let gameSettings = { ...DEFAULT_SETTINGS };
 window.gameSettings = gameSettings;
 
 const bgmAudio = document.getElementById('bgm-audio');
-//const seAudio = document.getElementById('se-audio');
 let isBgmPlaybackStarted = false;
 //let isSePlaybackStarted = false;
+
+function syncSettingsToStore() {
+    if (window.settingsStore?.applySettings) {
+        window.settingsStore.applySettings(gameSettings);
+    }
+}
 
 function updateBgmVolume(value) {
     const nextVolume = Number(value);
     gameSettings.bgmVolume = nextVolume;
+    syncSettingsToStore();
 
     if (!bgmAudio) {
         return;
@@ -37,32 +41,6 @@ function updateBgmVolume(value) {
         console.error('BGMの再生に失敗しました:', error);
     }
 }
-
-/*function updateSeVolume(value) {
-    const nextVolume = Number(value);
-    gameSettings.seVolume = nextVolume;
-
-    if (!seAudio) {
-        return;
-    }
-
-    seAudio.volume = nextVolume / 100;
-
-    if (isSePlaybackStarted) {
-        return;
-    }
-
-    try {
-        seAudio.currentTime = 0;
-        seAudio.play().then(() => {
-            isSePlaybackStarted = true;
-        }).catch((error) => {
-            console.error('SEの再生に失敗しました:', error);
-        });
-    } catch (error) {
-        console.error('SEの再生に失敗しました:', error);
-    }
-}*/
 
 // スライダーの値をリアルタイムで更新
 function updateSliderFill(slider) {
@@ -101,40 +79,49 @@ document.querySelectorAll('.slider').forEach(slider => {
 
         if (this.id === 'bgm-volume') {
             updateBgmVolume(this.value);
-        } else if (this.id === 'se-volume') {
-            updateSeVolume(this.value);
         }
     });
 
     if (slider.id === 'bgm-volume') {
         updateBgmVolume(slider.value);
-    } else if (slider.id === 'se-volume') {
-        updateSeVolume(slider.value);
     }
 });
 
-// ラジオボタンのキーボード操作対応
-document.querySelectorAll('.radio-button').forEach(radio => {
-    radio.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            const name = this.name;
-            const radios = document.querySelectorAll(`input[name="${name}"]`);
-            const index = Array.from(radios).indexOf(this);
-            const nextRadio = radios[(index + 1) % radios.length];
-            nextRadio.checked = true;
-            nextRadio.focus();
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            const name = this.name;
-            const radios = document.querySelectorAll(`input[name="${name}"]`);
-            const index = Array.from(radios).indexOf(this);
-            const prevRadio = radios[(index - 1 + radios.length) % radios.length];
-            prevRadio.checked = true;
-            prevRadio.focus();
-        }
-    });
-});
+function readPersistedSettings() {
+    try {
+        const raw = localStorage.getItem('rpg-game-settings');
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        console.warn('設定の読み込みに失敗しました:', error);
+        return null;
+    }
+}
+
+function applyStoredSettings() {
+    const persistedSettings = readPersistedSettings();
+    const storedSettings = persistedSettings || (window.settingsStore?.getSettings ? window.settingsStore.getSettings() : null);
+    if (!storedSettings) {
+        return;
+    }
+
+    gameSettings = { ...gameSettings, ...storedSettings };
+    window.gameSettings = gameSettings;
+
+    if (window.settingsStore?.applySettings) {
+        window.settingsStore.applySettings(gameSettings);
+    }
+
+    const bgmSlider = document.getElementById('bgm-volume');
+    if (bgmSlider) {
+        bgmSlider.value = String(gameSettings.bgmVolume);
+        updateSliderFill(bgmSlider);
+    }
+
+    const fullscreenToggle = document.getElementById('fullscreen');
+    if (fullscreenToggle) {
+        fullscreenToggle.checked = Boolean(gameSettings.fullscreen);
+    }
+}
 
 // トグルスイッチのアクセシビリティ
 document.querySelectorAll('.toggle-checkbox').forEach(toggle => {
@@ -143,20 +130,19 @@ document.querySelectorAll('.toggle-checkbox').forEach(toggle => {
     };
 
     toggle.addEventListener('change', function() {
+        gameSettings.fullscreen = this.checked;
+        syncSettingsToStore();
+
         if (this.checked) {
-            if (document.fullscreenEnabled) {
+            if (document.fullscreenEnabled && !document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {
-                    this.checked = false;
-                });
-            } else {
-                this.checked = false;
-            }
-        } else {
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => {
-                    this.checked = true;
+                    toggle.checked = Boolean(document.fullscreenElement);
                 });
             }
+        } else if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {
+                toggle.checked = Boolean(document.fullscreenElement);
+            });
         }
     });
 
@@ -192,6 +178,8 @@ document.querySelectorAll('.mute-button').forEach(button => {
         slider.dispatchEvent(new Event('input', { bubbles: true }));
     });
 });
+
+applyStoredSettings();
 
 // 戻るボタン
 const backButton = document.querySelector('.back-button');

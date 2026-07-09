@@ -10,7 +10,6 @@
 
 <body>
     <audio id="bgm-audio" src="./js/甘茶の音楽工房_フィヨルドの澄んだ風.mp3" loop></audio><!--仮のBGMファイルです 全画面で同じBGMを流します-->
-    <!--<audio id="se-audio" src="効果音ラボ_剣で斬る1.mp3" loop></audio>仮のSEファイルです-->
 
     <div class="settings-container">
         <h1 class="settings-title">設定画面</h1>
@@ -33,31 +32,6 @@
                 </div>
             </div>
 
-            <!-- SEの実装は時間がかかるので、一旦無しにします。
-            <div class="settings-group">
-                <label for="se-volume" class="settings-label">SE音量</label>
-                <div class="slider-wrapper">
-                    <span class="slider-value-min">0</span>
-                    <div class="slider-container">
-                        <input 
-                            type="range" 
-                            id="se-volume" 
-                            name="se-volume" 
-                            min="0" 
-                            max="100" 
-                            value="100"
-                            class="slider"
-                        >
-                        <div class="slider-track">
-                            <div class="slider-fill"></div>
-                        </div>
-                    </div>
-                    <span class="slider-current">100</span>
-                    <button type="button" class="mute-button mute-icon" aria-label="SE音量をミュート">🔇</button>
-                </div>
-            </div>
-            -->
-
             <!-- フルスクリーン（パネル） -->
             <div class="panel">
                 <div class="panel-row">
@@ -74,52 +48,12 @@
                 </div>
             </div>
 
-            <!-- テキスト速度 -->
-            <div class="settings-group">
-                <label class="settings-label">テキスト速度</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="text-speed-fast" name="text-speed" value="fast" class="radio-button">
-                        <label for="text-speed-fast" class="radio-label">早い</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="text-speed-normal" name="text-speed" value="normal" checked
-                            class="radio-button">
-                        <label for="text-speed-normal" class="radio-label">普通</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="text-speed-slow" name="text-speed" value="slow" class="radio-button">
-                        <label for="text-speed-slow" class="radio-label">遅い</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- パフォーマンス -->
-            <div class="settings-group">
-                <label class="settings-label">パフォーマンス</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="performance-high" name="performance" value="high" checked
-                            class="radio-button">
-                        <label for="performance-high" class="radio-label">高</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="performance-low" name="performance" value="low" class="radio-button">
-                        <label for="performance-low" class="radio-label">低</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 説明テキスト -->
-            <div class="settings-note">
-                <p>（動作が不安定な場合、低にしてください）</p>
-            </div>
-
             <!-- 戻るボタン -->
             <button type="button" class="back-button">戻る</button>
         </form>
     </div>
 
+    <script src="./js/settingsStore.js"></script>
     <script src="settings.js"></script>
 </body>
 
