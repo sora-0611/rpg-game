@@ -43,12 +43,8 @@
     fleeNoButton: document.getElementById("flee-no-button"),
     fleeCloseButton: document.getElementById("flee-close-button"),
     menuWindow: document.getElementById("menu-window"),
-    menuTitleButton: document.getElementById("menu-title-button"),
     menuSettingsButton: document.getElementById("menu-settings-button"),
     menuCloseButton: document.getElementById("menu-close-button"),
-    titleConfirmScrim: document.getElementById("title-confirm-scrim"),
-    titleConfirmYes: document.getElementById("title-confirm-yes"),
-    titleConfirmNo: document.getElementById("title-confirm-no"),
     toast: document.getElementById("toast"),
   };
 
@@ -414,7 +410,6 @@
     dom.itemWindow.hidden = true;
     dom.fleeWindow.hidden = true;
     dom.menuWindow.hidden = true;
-    dom.titleConfirmScrim.hidden = true;
     dom.menuButton.hidden = false;
   }
 
@@ -529,19 +524,8 @@
 
   dom.menuButton.addEventListener("click", openMenuWindow);
   dom.menuCloseButton.addEventListener("click", closeMenuWindow);
-  dom.menuTitleButton.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = false;
-  });
   dom.menuSettingsButton.addEventListener("click", () => {
     showToast("設定画面は未実装です。");
-  });
-  dom.titleConfirmYes.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = true;
-    closeMenuWindow();
-    window.location.href = "../index.html";
-  });
-  dom.titleConfirmNo.addEventListener("click", () => {
-    dom.titleConfirmScrim.hidden = true;
   });
 
   // ---------- 起動 ----------
