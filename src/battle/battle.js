@@ -26,6 +26,7 @@
     playerStatsLine: document.getElementById("player-stats-line"),
     playerHpFill: document.getElementById("player-hp-fill"),
     playerHpValue: document.getElementById("player-hp-value"),
+    partyStatus: document.getElementById("party-status"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
     btnDefend: document.getElementById("btn-defend"),
@@ -174,14 +175,25 @@
         return;
       }
       const useGroupAttack = enemy.groupAttack && (!enemy.singleAttack || Math.random() < 0.5);
+      const newlyDowned = [];
+      let message;
       if (useGroupAttack) {
-        aliveCharacters.forEach((target) => applyEnemyDamage(enemy, target));
-        logMessage(`${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`);
+        aliveCharacters.forEach((target) => {
+          applyEnemyDamage(enemy, target);
+          if (target.hpCurrent <= 0) newlyDowned.push(target.name);
+        });
+        message = `${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`;
       } else {
         const target = aliveCharacters[Math.floor(Math.random() * aliveCharacters.length)];
         const damage = applyEnemyDamage(enemy, target);
-        logMessage(`${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`);
+        message = `${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`;
+        if (target.hpCurrent <= 0) newlyDowned.push(target.name);
       }
+      // 戦闘不能になったキャラクターがいれば、行動が回ってこない理由が分かるように明示する
+      if (newlyDowned.length > 0) {
+        message += ` ${newlyDowned.join("、")}は戦闘不能になった！`;
+      }
+      logMessage(message);
       state.characters.forEach((c) => {
         c.isDefending = false;
       });
@@ -526,6 +538,7 @@
   function renderAll() {
     renderEnemy();
     renderActiveCharacterBox();
+    renderPartyStatus();
     renderCommands();
   }
 
@@ -564,6 +577,33 @@
     dom.playerAvatar.textContent = displayCharacter.name.charAt(displayCharacter.name.length - 1);
     dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack}　防御 ${displayCharacter.defense}`;
     setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
+  }
+
+  // パーティ全員のHP・戦闘不能状態を常時一覧表示する（行動中キャラだけだと誰が戦闘不能か分からず、
+  // なぜそのキャラにばかりターンが回ってくるのか分かりにくいため）
+  function renderPartyStatus() {
+    dom.partyStatus.innerHTML = "";
+    state.characters.forEach((character, index) => {
+      const isDown = character.hpCurrent <= 0;
+      const isActing = state.phase === "PLAYER_TURN" && index === state.actingIndex;
+
+      const row = document.createElement("li");
+      row.className = "party-status-row" + (isDown ? " is-down" : "") + (isActing ? " is-acting" : "");
+      row.innerHTML = `
+        <span class="party-status-name">${character.name}</span>
+        <span class="party-status-hp-bar"><span class="party-status-hp-fill"></span></span>
+        <span class="party-status-hp-value"></span>
+      `;
+
+      const fillEl = row.querySelector(".party-status-hp-fill");
+      const valueEl = row.querySelector(".party-status-hp-value");
+      const ratio = character.hpMax > 0 ? Math.max(0, character.hpCurrent) / character.hpMax : 0;
+      fillEl.style.width = `${Math.round(ratio * 100)}%`;
+      fillEl.className = `party-status-hp-fill ${hpBarClass(character.hpCurrent, character.hpMax)}`.trim();
+      valueEl.textContent = isDown ? "戦闘不能" : `${Math.max(0, character.hpCurrent)} / ${character.hpMax}`;
+
+      dom.partyStatus.appendChild(row);
+    });
   }
 
   function renderCommands() {
@@ -627,7 +667,7 @@
   dom.titleConfirmYes.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = true;
     closeMenuWindow();
-    showToast("タイトル画面へ戻りました（デモ）。");
+    window.location.href = "../index.html";
   });
   dom.titleConfirmNo.addEventListener("click", () => {
     dom.titleConfirmScrim.hidden = true;
