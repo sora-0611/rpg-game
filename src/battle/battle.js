@@ -121,7 +121,19 @@
       // 戦闘データがない状態: HPバーは表示する情報が無いため非表示にする
       dom.enemyHpBlock.hidden = true;
       dom.playerHpBlock.hidden = true;
-      logMessage("セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？");
+      showConfirm(
+        "セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？",
+        () => {
+          if (window.BRIDGE) {
+            BRIDGE.clearRawGameState();
+          }
+          hideConfirm();
+          startBattle(enemyId);
+        },
+        () => {
+          hideConfirm();
+        }
+      );
     }
   }
 

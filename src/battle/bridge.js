@@ -64,6 +64,10 @@
     localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
   }
 
+  function clearRawGameState() {
+    localStorage.removeItem(SAVE_KEY);
+  }
+
   window.BRIDGE = {
     ENEMY_ID_TO_RPG,
     ENEMY_ID_TO_BATTLE,
@@ -71,5 +75,6 @@
     ITEM_ID_TO_BATTLE,
     readRawGameState,
     writeRawGameState,
+    clearRawGameState,
   };
 })();
