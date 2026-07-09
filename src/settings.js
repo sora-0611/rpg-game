@@ -1,6 +1,6 @@
 const DEFAULT_SETTINGS = {
     bgmVolume: 100,
-    seVolume: 100,
+    //seVolume: 100,SEの実装は時間がかかるので、一旦無しにします.
     textSpeed: 'normal',
     performance: 'high'
 };
@@ -8,18 +8,77 @@ const DEFAULT_SETTINGS = {
 const gameSettings = { ...DEFAULT_SETTINGS };
 window.gameSettings = gameSettings;
 
+const bgmAudio = document.getElementById('bgm-audio');
+//const seAudio = document.getElementById('se-audio');
+let isBgmPlaybackStarted = false;
+//let isSePlaybackStarted = false;
+
+function updateBgmVolume(value) {
+    const nextVolume = Number(value);
+    gameSettings.bgmVolume = nextVolume;
+
+    if (!bgmAudio) {
+        return;
+    }
+
+    bgmAudio.volume = nextVolume / 100;
+
+    if (isBgmPlaybackStarted) {
+        return;
+    }
+
+    try {
+        bgmAudio.play().then(() => {
+            isBgmPlaybackStarted = true;
+        }).catch((error) => {
+            console.error('BGMの再生に失敗しました:', error);
+        });
+    } catch (error) {
+        console.error('BGMの再生に失敗しました:', error);
+    }
+}
+
+/*function updateSeVolume(value) {
+    const nextVolume = Number(value);
+    gameSettings.seVolume = nextVolume;
+
+    if (!seAudio) {
+        return;
+    }
+
+    seAudio.volume = nextVolume / 100;
+
+    if (isSePlaybackStarted) {
+        return;
+    }
+
+    try {
+        seAudio.currentTime = 0;
+        seAudio.play().then(() => {
+            isSePlaybackStarted = true;
+        }).catch((error) => {
+            console.error('SEの再生に失敗しました:', error);
+        });
+    } catch (error) {
+        console.error('SEの再生に失敗しました:', error);
+    }
+}*/
+
 // スライダーの値をリアルタイムで更新
 function updateSliderFill(slider) {
     const sliderContainer = slider.closest('.slider-container');
+    if (!sliderContainer) {
+        return;
+    }
+
     const sliderFill = sliderContainer.querySelector('.slider-fill');
-    
-    // スライダーの値を0～100の範囲で正規化
+    if (!sliderFill) {
+        return;
+    }
+
     const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-    
-    // フィルバーの幅を更新
     sliderFill.style.width = value + '%';
 
-    // 近くの現在値表示を更新（.slider-current があれば）
     const wrapper = slider.closest('.slider-wrapper');
     if (wrapper) {
         const current = wrapper.querySelector('.slider-current');
@@ -29,19 +88,29 @@ function updateSliderFill(slider) {
 
 // 初期化時にスライダーのフィルバーを設定
 document.querySelectorAll('.slider').forEach(slider => {
-    // 初期値を設定
     updateSliderFill(slider);
-    // 初期の現在値表示（存在する場合）
+
     const wrapper = slider.closest('.slider-wrapper');
     if (wrapper) {
         const current = wrapper.querySelector('.slider-current');
         if (current) current.textContent = String(Math.round(slider.value));
     }
-    
-    // 入力時に更新
+
     slider.addEventListener('input', function() {
         updateSliderFill(this);
+
+        if (this.id === 'bgm-volume') {
+            updateBgmVolume(this.value);
+        } else if (this.id === 'se-volume') {
+            updateSeVolume(this.value);
+        }
     });
+
+    if (slider.id === 'bgm-volume') {
+        updateBgmVolume(slider.value);
+    } else if (slider.id === 'se-volume') {
+        updateSeVolume(slider.value);
+    }
 });
 
 // ラジオボタンのキーボード操作対応
@@ -97,31 +166,30 @@ document.querySelectorAll('.toggle-checkbox').forEach(toggle => {
 
 // ミュートボタンの機能
 document.querySelectorAll('.mute-button').forEach(button => {
-    // 前の音量を保存するデータ属性を初期化
     button.dataset.previousVolume = '100';
-    
+
     button.addEventListener('click', function(e) {
         e.preventDefault();
-        
-        // ボタンの直前のスライダーを探す
+
         const sliderWrapper = this.closest('.slider-wrapper');
-        const slider = sliderWrapper.querySelector('.slider');
-        
+        const slider = sliderWrapper ? sliderWrapper.querySelector('.slider') : null;
+
+        if (!slider) {
+            return;
+        }
+
         const currentVolume = parseInt(slider.value);
         const previousVolume = parseInt(this.dataset.previousVolume);
-        
-        // 現在の音量が0以上50未満なら、前の音量に戻す。そうでなければ0にする
+
         if (currentVolume > 0) {
-            // 音量をミュート（0%）
             this.dataset.previousVolume = currentVolume;
             slider.value = 0;
         } else {
-            // 前の音量に戻す
             slider.value = previousVolume;
         }
-        
-        // スライダーのフィルバーを更新
+
         updateSliderFill(slider);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
     });
 });
 
@@ -141,14 +209,14 @@ if (backButton) {
             targetPage = './rpg-game/explore.html';
         } else if (fromParam === 'title') {
             targetPage = 'index.html';
-        } else if (referrerPage === 'tansaku.html') {
+        } else if (referrerPage === 'tansaku.html') {// 探索画面から来た場合は探索画面に戻る.
             targetPage = 'tansaku.html';
         } else if (referrerUrl && referrerUrl.pathname.includes('rpg-game')) {
             targetPage = './rpg-game/explore.html';
-        } else if (referrerPage === 'index.html') {
+        } else if (referrerPage === 'index.html') {// タイトル画面から来た場合はタイトル画面に戻る.
             targetPage = 'index.html';
         }
 
-        window.location.href = targetPage;// それ以外の場合は「index.html」に戻る
+        window.location.href = targetPage;
     });
 }
