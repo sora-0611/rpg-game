@@ -129,15 +129,22 @@ document.querySelectorAll('.mute-button').forEach(button => {
 const backButton = document.querySelector('.back-button');
 if (backButton) {
     backButton.addEventListener('click', function() {
+        // file:// で開いた場合 document.referrer が空になることがあるため、
+        // まず遷移元を明示する ?from= クエリを優先し、無ければ referrer で推測する
+        const fromParam = new URLSearchParams(window.location.search).get('from');
         const referrer = document.referrer;
         const referrerUrl = referrer ? new URL(referrer, window.location.href) : null;
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
         let targetPage = 'index.html';
 
-        if (referrerPage === 'tansaku.html') {
+        if (fromParam === 'explore') {
+            targetPage = './rpg-game/explore.html';
+        } else if (fromParam === 'title') {
+            targetPage = 'index.html';
+        } else if (referrerPage === 'tansaku.html') {
             targetPage = 'tansaku.html';
         } else if (referrerUrl && referrerUrl.pathname.includes('rpg-game')) {
-            targetPage = './rpg-game/index.html';
+            targetPage = './rpg-game/explore.html';
         } else if (referrerPage === 'index.html') {
             targetPage = 'index.html';
         }

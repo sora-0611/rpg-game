@@ -5,7 +5,6 @@
 
 // ===== CONSTANTS =====
 const SCREEN_MAP = {
-  SETTINGS: 'screen-settings',
   MAPS: 'screen-maps',
   EXPLORE: 'screen-explore',
   UPGRADE: 'screen-upgrade',
@@ -318,12 +317,15 @@ function renderExploreScreen(gameState) {
 
   // パーティーステータス更新
   updatePartyStatus(gameState, 'explore');
+  updatePartyStatus(gameState, 'battle');
 
   // 探索マップを描画
   drawExploreMap(gameState);
 
   // メッセージを初期化
-  setMessage('explore-message', 'マップを探索してください。');
+  if (!gameState.battle.isActive) {
+    setMessage('explore-message', 'マップを探索してください。');
+  }
 }
 
 /**
@@ -419,8 +421,6 @@ function handleUpgradeCharacter(charIndex) {
  */
 function renderScreen(sceneName, gameState) {
   switch (sceneName) {
-    case 'SETTINGS':
-      break;
     case 'MAP_SELECT':
       renderMapSelectScreen(gameState);
       break;
@@ -438,20 +438,6 @@ function renderScreen(sceneName, gameState) {
  * UIを初期化してイベントリスナーを登録
  */
 function initializeUI() {
-  // 設定画面の戻るボタン
-  const btnSettingsBack = document.getElementById('btn-settings-back');
-  if (btnSettingsBack) {
-    btnSettingsBack.addEventListener('click', () => {
-      const lastScene = window.gameState?.lastScene || 'EXPLORE';
-      window.switchScene(lastScene);
-    });
-  }
-
-  // 設定JS初期化
-  if (window.SETTINGS) {
-    window.SETTINGS.initialize();
-  }
-
   // マップ選択ボタン
   for (let mapId = 1; mapId <= 3; mapId++) {
     const button = document.getElementById(`btn-map-select-${mapId}`);
@@ -459,6 +445,11 @@ function initializeUI() {
       button.addEventListener('click', () => {
         // マップ選択（後続フェーズで実装）
         console.log(`Map ${mapId} selected`);
+        // 別のマップに切り替える場合は初期位置からスタートする
+        // （同じマップを選び直した場合は探索中の位置を維持する）
+        if (window.gameState.player.currentMapId !== mapId) {
+          window.gameState.player.pos = { x: 1, y: 1 };
+        }
         window.gameState.player.currentMapId = mapId;
         window.switchScene('EXPLORE');
       });
@@ -489,18 +480,25 @@ function initializeUI() {
     });
   }
 
-  const btnMenuClose = document.getElementById('btn-menu-close');
-  if (btnMenuClose && exploreMenu) {
-    btnMenuClose.addEventListener('click', () => {
-      exploreMenu.classList.add('window--hidden');
-    });
-  }
-
   const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
   if (btnMenuUpgrade) {
     btnMenuUpgrade.addEventListener('click', () => {
+      window.location.href = '../enhancement.html';
+    });
+  }
+
+  const btnMenuItems = document.getElementById('btn-menu-items');
+  if (btnMenuItems) {
+    btnMenuItems.addEventListener('click', () => {
       if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      window.switchScene('UPGRADE');
+      showToast('アイテム画面は未実装です。', 'info');
+    });
+  }
+
+  const btnMenuSettings = document.getElementById('btn-menu-settings');
+  if (btnMenuSettings) {
+    btnMenuSettings.addEventListener('click', () => {
+      window.location.href = '../settings.html?from=explore';
     });
   }
 
@@ -511,11 +509,10 @@ function initializeUI() {
     });
   }
 
-  const btnMenuSettings = document.getElementById('btn-menu-settings');
-  if (btnMenuSettings) {
-    btnMenuSettings.addEventListener('click', () => {
-      if (exploreMenu) exploreMenu.classList.add('window--hidden');
-      window.switchScene('SETTINGS');
+  const btnMenuClose = document.getElementById('btn-menu-close');
+  if (btnMenuClose && exploreMenu) {
+    btnMenuClose.addEventListener('click', () => {
+      exploreMenu.classList.add('window--hidden');
     });
   }
 
@@ -593,7 +590,7 @@ function registerExploreControls() {
  */
 function handleExploreMove(direction) {
   const gameState = window.gameState;
-  if (!gameState || gameState.scene !== 'EXPLORE' || gameState.battle.isActive) {
+  if (!gameState || gameState.scene !== 'EXPLORE') {
     return;
   }
 
@@ -618,9 +615,22 @@ function handleExploreMove(direction) {
   updatePartyStatus(gameState, 'explore');
   drawExploreMap(gameState);
 
-  // 敵遭遇時はメッセージのみ表示（戦闘画面は未実装）
+  if (gameState.battle.isActive) {
+    // src/battle 側は数値/'mobN'形式の別スキーマの敵IDを使うため変換する。
+    // src/battle/bridge.js の ENEMY_ID_TO_BATTLE と同期を保つこと。
+    const ENEMY_ID_TO_BATTLE = {
+      slime_1: 'mob1', slime_2: 'mob2', slime_3: 'mob3',
+      boss_1: 'boss1', boss_2: 'boss2', final_boss: 'lastboss',
+    };
+    const rpgEnemyId = gameState.battle.currentEnemyId || 'slime_1';
+    const battleEnemyId = ENEMY_ID_TO_BATTLE[rpgEnemyId] || 'mob1';
+    window.SAVE.saveGameState(gameState);
+    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(battleEnemyId)}`);
+    return;
+  }
+
   if (result.isEnemy || result.isBoss) {
-    showToast('敵が現れた！（戦闘画面は後続フェーズで実装予定）', 'warning');
+    setMessage('explore-message', '戦闘が開始しました。');
   }
 }
 

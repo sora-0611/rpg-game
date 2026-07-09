@@ -19,16 +19,49 @@ function setGameState(newState) {
 }
 
 function initializeGame() {
-  // ゲーム状態を作成
-  const initialState = STATE.createNewGameState();
-  setGameState(STATE.sanitizeGameState(initialState));
+  // セーブデータがあれば読み込んで再開し、無ければ新規作成する
+  // （戦闘画面からの復帰時は事前にSAVE.saveGameStateされている想定）
+  let initialState = (window.SAVE && SAVE.hasSavedGame()) ? SAVE.loadSavedGameState() : null;
+  if (!initialState) {
+    initialState = STATE.sanitizeGameState(STATE.createNewGameState());
+  }
+
+  // 戦闘画面を閉じる等で中断され、battle.isActiveが立ったまま保存されている場合の救済。
+  // 探索画面が起動する時点で本来戦闘中ということはあり得ない
+  // （通常は戦闘画面側がisActiveをfalseに戻してから戻ってくる）ため、ここで強制的に解除する。
+  // isActiveが残っていると registerExploreControls の移動処理がずっとブロックされ、
+  // ボスの位置に固定されたまま動けなくなる不具合につながる。
+  if (initialState.battle && initialState.battle.isActive) {
+    initialState.battle.isActive = false;
+    initialState.battle.enemies = [];
+    initialState.battle.log = [];
+
+    // 中断時の座標はボス等の遭遇マスの上のままになっていることが多く、
+    // そのまま再開すると表示や再遭遇判定がおかしくなるため、隣接する移動可能マスへ1マスずらす
+    if (window.EXPLORE && typeof EXPLORE.canMoveTo === 'function') {
+      const { x, y } = initialState.player.pos;
+      const candidates = [
+        { x: x, y: y - 1 },
+        { x: x, y: y + 1 },
+        { x: x - 1, y: y },
+        { x: x + 1, y: y },
+      ];
+      const nextPos = candidates.find((pos) => EXPLORE.canMoveTo(initialState, pos.x, pos.y));
+      if (nextPos) {
+        initialState.player.pos = nextPos;
+      }
+    }
+  }
+
+  setGameState(initialState);
 
   // UIを初期化
   UI.initializeUI();
-
-  // マップ選択画面から開始
   UI.hideAllScreens();
-  switchScene('MAP_SELECT');
+
+  // 保存されていたシーンから再開する（戦闘画面がEXPLORE/MAP_SELECTを設定して戻ってくる）
+  const resumeScene = SCENE_TO_SCREEN[initialState.scene] ? initialState.scene : 'MAP_SELECT';
+  switchScene(resumeScene);
 }
 
 /**
@@ -68,7 +101,6 @@ function switchScene(newSceneName) {
  * ui.jsから参照されるので定義を統一
  */
 const SCENE_TO_SCREEN = {
-  SETTINGS: 'screen-settings',
   MAP_SELECT: 'screen-maps',
   EXPLORE: 'screen-explore',
   UPGRADE: 'screen-upgrade',

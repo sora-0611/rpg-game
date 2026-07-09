@@ -26,6 +26,7 @@
     playerStatsLine: document.getElementById("player-stats-line"),
     playerHpFill: document.getElementById("player-hp-fill"),
     playerHpValue: document.getElementById("player-hp-value"),
+    partyStatus: document.getElementById("party-status"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
     btnDefend: document.getElementById("btn-defend"),
@@ -54,6 +55,8 @@
     characters: [],
     enemy: null,
     inventory: [],
+    coin: 0,
+    hasIncomingSave: false,
     phase: "PLAYER_TURN",
     turnQueue: [],
     actingIndex: 0,
@@ -62,6 +65,34 @@
   };
 
   // ---------- 初期化 ----------
+
+  // 探索画面(gameState)から引き継いだHP・所持品・コインをローカルstateに反映する
+  // 引き継ぎ元が無い場合（単体で戦闘画面を開いた場合）はCHARACTERS_BASE/INITIAL_INVENTORYのまま
+  function applyIncomingGameState() {
+    const gameState = window.BRIDGE && BRIDGE.readRawGameState();
+    if (!gameState) {
+      state.hasIncomingSave = false;
+      state.coin = 0;
+      return;
+    }
+
+    state.hasIncomingSave = true;
+    state.coin = gameState.player && typeof gameState.player.coin === "number" ? gameState.player.coin : 0;
+
+    (gameState.party || []).forEach((member) => {
+      const target = state.characters.find((c) => c.characterId === member.characterId);
+      if (!target) return;
+      target.hpMax = member.hpMax;
+      target.hpCurrent = Math.max(0, Math.min(member.hpCurrent, member.hpMax));
+      target.attack = member.attack;
+      target.defense = member.defense;
+      target.enhanceLevel = member.enhanceLevel;
+    });
+
+    state.inventory = (gameState.inventory || [])
+      .map((entry) => ({ itemId: BRIDGE.ITEM_ID_TO_BATTLE[entry.itemId], quantity: entry.quantity }))
+      .filter((entry) => entry.itemId !== undefined);
+  }
 
   // 戦闘開始処理。enemyId未指定時は出現テーブルから抽選する（探索画面から渡される想定）
   function startBattle(enemyId) {
@@ -73,6 +104,7 @@
       state.characters = CHARACTERS_BASE.map((c) => Object.assign({}, c, { hpCurrent: c.hpMax, isDefending: false }));
       state.enemy = Object.assign({}, enemyTemplate, { hpCurrent: enemyTemplate.hpMax });
       state.inventory = INITIAL_INVENTORY.map((entry) => Object.assign({}, entry));
+      applyIncomingGameState();
       state.phase = "PLAYER_TURN";
       state.pendingItemId = null;
       hideConfirm();
@@ -139,14 +171,25 @@
         return;
       }
       const useGroupAttack = enemy.groupAttack && (!enemy.singleAttack || Math.random() < 0.5);
+      const newlyDowned = [];
+      let message;
       if (useGroupAttack) {
-        aliveCharacters.forEach((target) => applyEnemyDamage(enemy, target));
-        logMessage(`${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`);
+        aliveCharacters.forEach((target) => {
+          applyEnemyDamage(enemy, target);
+          if (target.hpCurrent <= 0) newlyDowned.push(target.name);
+        });
+        message = `${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`;
       } else {
         const target = aliveCharacters[Math.floor(Math.random() * aliveCharacters.length)];
         const damage = applyEnemyDamage(enemy, target);
-        logMessage(`${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`);
+        message = `${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`;
+        if (target.hpCurrent <= 0) newlyDowned.push(target.name);
       }
+      // 戦闘不能になったキャラクターがいれば、行動が回ってこない理由が分かるように明示する
+      if (newlyDowned.length > 0) {
+        message += ` ${newlyDowned.join("、")}は戦闘不能になった！`;
+      }
+      logMessage(message);
       state.characters.forEach((c) => {
         c.isDefending = false;
       });
@@ -372,6 +415,7 @@
       ? minDrop + Math.floor(Math.random() * (maxDrop - minDrop + 1))
       : 0;
     const obtainedCounts = rollBattleItemDrops(enemy, slotCount);
+    state.coin += coin;
 
     let resultText = `${enemy.name}を倒した。`;
     if (coin > 0) resultText += ` コインを${coin}枚手に入れた。`;
@@ -387,6 +431,60 @@
     state.phase = "DEFEAT";
     logMessage("全滅した。");
     renderAll();
+  }
+
+  // ---------- 探索画面への復帰 ----------
+
+  // 戦闘結果をgameStateに反映してlocalStorageへ書き戻す。
+  // 敗北時は探索画面のendBattleDefeat()と同じ仕様（全回復+開始位置(1,1)へリセット）に揃える。
+  // 勝利・逃亡時は実際のHP・所持品・コインをそのまま引き継ぐ。
+  function applyBattleResultToGameState() {
+    const gameState = BRIDGE.readRawGameState();
+    if (!gameState) return;
+
+    if (state.phase === "DEFEAT") {
+      gameState.party.forEach((member) => {
+        member.hpCurrent = member.hpMax;
+      });
+      gameState.player.pos = { x: 1, y: 1 };
+    } else {
+      state.characters.forEach((c) => {
+        const member = gameState.party.find((p) => p.characterId === c.characterId);
+        if (member) member.hpCurrent = Math.max(0, Math.min(c.hpCurrent, member.hpMax));
+      });
+    }
+
+    gameState.inventory = state.inventory
+      .filter((entry) => BRIDGE.ITEM_ID_TO_RPG[entry.itemId])
+      .map((entry) => ({ itemId: BRIDGE.ITEM_ID_TO_RPG[entry.itemId], quantity: entry.quantity }));
+
+    gameState.player.coin = state.coin;
+
+    if (state.phase === "VICTORY" && state.enemy.isBoss) {
+      const mapId = gameState.player.currentMapId;
+      if (gameState.mapProgress[mapId]) gameState.mapProgress[mapId].bossDefeated = true;
+      gameState.scene = "MAP_SELECT";
+    } else {
+      gameState.scene = "EXPLORE";
+    }
+
+    gameState.battle.isActive = false;
+    gameState.battle.enemies = [];
+    gameState.battle.log = [];
+
+    BRIDGE.writeRawGameState(gameState);
+  }
+
+  // 「戦闘終了」ボタン: 探索画面から来ていれば結果を反映して戻る。単体テスト起動時は戻り先が無い。
+  function handleBattleEnd() {
+    const battleOver = state.phase === "VICTORY" || state.phase === "DEFEAT" || state.phase === "ESCAPED";
+    if (!battleOver) return;
+    if (!state.hasIncomingSave) {
+      showToast("この画面は単体テスト用です（戻り先がありません）。");
+      return;
+    }
+    applyBattleResultToGameState();
+    window.location.assign("../rpg-game/explore.html");
   }
 
   // ---------- メッセージ / 確認 ----------
@@ -435,6 +533,7 @@
   function renderAll() {
     renderEnemy();
     renderActiveCharacterBox();
+    renderPartyStatus();
     renderCommands();
   }
 
@@ -464,8 +563,9 @@
   }
 
   // ワイヤーフレームの「プレイヤー」枠は、行動中（または先頭の生存中）キャラクターを表示する
+  // VICTORY/ESCAPEDは直前まで行動していたキャラクターのHPをそのまま表示する（先頭生存者に切り替えるとHP表示が瞬間的に不一致に見えるため）
   function renderActiveCharacterBox() {
-    const displayCharacter = state.phase === "PLAYER_TURN"
+    const displayCharacter = state.phase === "PLAYER_TURN" || state.phase === "VICTORY" || state.phase === "ESCAPED"
       ? getActingCharacter()
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
@@ -474,11 +574,39 @@
     setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
+  // パーティ全員のHP・戦闘不能状態を常時一覧表示する（行動中キャラだけだと誰が戦闘不能か分からず、
+  // なぜそのキャラにばかりターンが回ってくるのか分かりにくいため）
+  function renderPartyStatus() {
+    dom.partyStatus.innerHTML = "";
+    state.characters.forEach((character, index) => {
+      const isDown = character.hpCurrent <= 0;
+      const isActing = state.phase === "PLAYER_TURN" && index === state.actingIndex;
+
+      const row = document.createElement("li");
+      row.className = "party-status-row" + (isDown ? " is-down" : "") + (isActing ? " is-acting" : "");
+      row.innerHTML = `
+        <span class="party-status-name">${character.name}</span>
+        <span class="party-status-hp-bar"><span class="party-status-hp-fill"></span></span>
+        <span class="party-status-hp-value"></span>
+      `;
+
+      const fillEl = row.querySelector(".party-status-hp-fill");
+      const valueEl = row.querySelector(".party-status-hp-value");
+      const ratio = character.hpMax > 0 ? Math.max(0, character.hpCurrent) / character.hpMax : 0;
+      fillEl.style.width = `${Math.round(ratio * 100)}%`;
+      fillEl.className = `party-status-hp-fill ${hpBarClass(character.hpCurrent, character.hpMax)}`.trim();
+      valueEl.textContent = isDown ? "戦闘不能" : `${Math.max(0, character.hpCurrent)} / ${character.hpMax}`;
+
+      dom.partyStatus.appendChild(row);
+    });
+  }
+
   function renderCommands() {
     const battleOver = state.phase === "VICTORY" || state.phase === "DEFEAT" || state.phase === "ESCAPED";
     const isPlayerTurn = state.phase === "PLAYER_TURN";
 
     dom.btnEnd.hidden = !battleOver;
+    dom.btnEnd.disabled = !battleOver;
     [dom.btnFight, dom.btnItem, dom.btnDefend, dom.btnFlee].forEach((btn) => {
       btn.hidden = battleOver;
     });
@@ -516,6 +644,7 @@
   dom.btnDefend.addEventListener("click", handleDefend);
   dom.btnItem.addEventListener("click", handleItemButton);
   dom.btnFlee.addEventListener("click", handleFleeButton);
+  dom.btnEnd.addEventListener("click", handleBattleEnd);
 
   dom.itemCloseButton.addEventListener("click", closeItemWindow);
   dom.fleeYesButton.addEventListener("click", handleFleeYes);
