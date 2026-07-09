@@ -21,11 +21,13 @@
     enemyStatsLine: document.getElementById("enemy-stats-line"),
     enemyHpFill: document.getElementById("enemy-hp-fill"),
     enemyHpValue: document.getElementById("enemy-hp-value"),
+    enemyHpBlock: document.getElementById("enemy-hp-block"),
     playerAvatar: document.getElementById("player-avatar"),
     playerName: document.getElementById("player-name"),
     playerStatsLine: document.getElementById("player-stats-line"),
     playerHpFill: document.getElementById("player-hp-fill"),
     playerHpValue: document.getElementById("player-hp-value"),
+    playerHpBlock: document.getElementById("player-hp-block"),
     partyStatus: document.getElementById("party-status"),
     btnFight: document.getElementById("btn-fight"),
     btnItem: document.getElementById("btn-item"),
@@ -109,10 +111,16 @@
       state.pendingItemId = null;
       hideConfirm();
       closeAllWindows();
+      // 戦闘データが正しく揃ったのでHPバーを表示する（前回失敗時に非表示にした分を戻す）
+      dom.enemyHpBlock.hidden = false;
+      dom.playerHpBlock.hidden = false;
       startPlayerRound();
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
+      // 戦闘データがない状態: HPバーは表示する情報が無いため非表示にする
+      dom.enemyHpBlock.hidden = true;
+      dom.playerHpBlock.hidden = true;
       logMessage("セーブデータが壊れています。セーブデータを消去し、最初から遊びますか？");
     }
   }
