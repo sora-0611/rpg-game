@@ -1,6 +1,7 @@
 /**
  * explore.js
- * 探索ロジック・移動・敵遭遇・アイテム取得
+ * 探索画面の移動・敵遭遇・戦闘開始・勝敗処理を担当します。
+ * プレイヤーがマップ上を動いたときに、何が起きるかの流れをここで管理します。
  */
 
 // ===== MOVEMENT FUNCTIONS =====
@@ -97,7 +98,8 @@ function recordVisitedPosition(gameState, x, y) {
 }
 
 /**
- * 移動先での位置イベントを処理
+ * 移動先で発生するイベントをまとめて処理する。
+ * ボス戦・敵遭遇・宝箱・通常移動の4つの流れを順に確認する。
  * @param {Object} gameState
  * @param {number} x
  * @param {number} y

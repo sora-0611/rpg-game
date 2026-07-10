@@ -1,6 +1,8 @@
 /**
  * item.js
- * アイテム使用ロジック
+ * アイテムの使用ルールをまとめたファイルです。
+ * 戦闘中・探索中で使えるアイテムが異なるため、
+ * ここで使用条件と効果を分けて処理します。
  */
 
 /**
@@ -44,7 +46,8 @@ function getFirstAliveEnemyIndex(gameState) {
 }
 
 /**
- * 戦闘中のアイテム効果を適用
+ * 戦闘中にアイテムを使う処理。
+ * 回復・攻撃などの効果を適用し、消費したら在庫を更新する。
  * @param {Object} gameState
  * @param {string} itemId
  * @return {Object}

@@ -1,6 +1,8 @@
 /**
  * ui.js
- * ゲーム画面描画・UI制御
+ * 画面の表示・非表示・メッセージ表示・HPバー更新など、
+ * ユーザーに見える部分の描画を担当するファイルです。
+ * 画面の見た目はここでまとめて制御します。
  */
 
 // ===== CONSTANTS =====
@@ -183,7 +185,9 @@ function updatePartyStatus(gameState, context = 'explore') {
 // ===== SCREEN RENDER FUNCTIONS =====
 
 /**
- * マップ選択画面をレンダリング
+ * マップ選択画面のボタン状態を更新する。
+ * 進行状況に応じて「選択可 / 未開放」を切り替えるため、
+ * ここでプレイヤーの進捗に合わせた表示を作る。
  * @param {Object} gameState
  */
 function renderMapSelectScreen(gameState) {

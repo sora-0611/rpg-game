@@ -1,7 +1,8 @@
 /**
  * state.js
- * ゲームのグローバル状態管理
- * 状態は gameState オブジェクトで一元管理
+ * ゲームの「状態」を一元管理するファイルです。
+ * HP・位置・所持コイン・所持アイテム・マップ進捗など、
+ * 画面をまたいで共有する情報はすべて gameState にまとめて保持します。
  */
 
 /**
@@ -109,7 +110,9 @@ function calculateCharacterStats(characterId, enhanceLevel = 1) {
 }
 
 /**
- * 初期ゲーム状態を作成
+ * 新規プレイ開始時の初期状態を作成する。
+ * ここで party・inventory・mapProgress などの初期構造を決めるため、
+ * 以後の処理はこの形を前提に動く。
  * @return {Object}
  */
 function createNewGameState() {

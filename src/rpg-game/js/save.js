@@ -1,6 +1,7 @@
 /**
  * save.js
- * セーブ・ロード機能
+ * localStorage を使ってゲーム状態を保存・読み込みするファイルです。
+ * 画面を閉じても進行を残したいときに使います。
  */
 
 const SAVE_KEY = 'rpg-game-save';
