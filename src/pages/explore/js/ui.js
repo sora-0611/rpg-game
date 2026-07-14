@@ -616,7 +616,7 @@ function initializeUI() {
 
       const confirmed = await showConfirmDialog('タイトルに戻りますか？', 'はい', 'いいえ');
       if (confirmed) {
-        window.location.assign('../title/title.html');
+        window.location.assign('../../index.html');
       }
     });
   }

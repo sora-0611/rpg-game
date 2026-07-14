@@ -216,18 +216,18 @@ if (backButton) {
         const referrer = document.referrer;
         const referrerUrl = referrer ? new URL(referrer, window.location.href) : null;
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
-        let targetPage = '../title/title.html';
+        let targetPage = '../../index.html';
 
         if (fromParam === 'explore') {
             targetPage = '../explore/explore.html';
         } else if (fromParam === 'title') {
-            targetPage = '../title/title.html';
+            targetPage = '../../index.html';
         } else if (referrerPage === 'tansaku.html') {// 探索画面から来た場合は探索画面に戻る.
             targetPage = '../explore/explore.html';
         } else if (referrerUrl && referrerUrl.pathname.includes('explore')) {
             targetPage = '../explore/explore.html';
         } else if (referrerPage === 'title.html') {// タイトル画面から来た場合はタイトル画面に戻る.
-            targetPage = '../title/title.html';
+            targetPage = '../../index.html';
         }
 
         window.location.href = targetPage;

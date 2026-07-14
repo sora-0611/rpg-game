@@ -10,11 +10,7 @@
 </head>
 <body>
   <div id="app" class="game-container">
-    <section id="screen-loading" class="screen">
-      <p class="loading-text">Now loading...</p>
-    </section>
-
-    <section id="screen-title" class="screen" hidden>
+    <section id="screen-title" class="screen">
       <h1 class="game-title">ゲームタイトル</h1>
       <nav class="title-menu">
         <button id="btn-start" class="btn btn-primary" type="button">はじめから</button>
@@ -32,5 +28,12 @@
   <script src="../../shared/js/screens/loading.js"></script>
   <script src="../../shared/js/screens/title.js"></script>
   <script src="../../shared/js/main.js"></script>
+  <script>
+    RPG.initLoadingScreen({
+      onFinished: function () {
+        RPG.showScreen('title');
+      }
+    });
+  </script>
 </body>
 </html>
