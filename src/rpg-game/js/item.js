@@ -149,6 +149,51 @@ function applyItemEffectInExplore(gameState, itemId) {
       STATE.consumeItemFromInventory(gameState, itemId, 1);
       return { success: true, message: `パーティー全員が${item.effectValue}回復した。` };
     }
+    case 'bridge_repair': {
+      // 周辺の壊れた橋を修復
+      const map = MAP.getMap(gameState.player.currentMapId);
+      if (!map) {
+        return { success: false, message: 'マップ情報が取得できません。' };
+      }
+
+      const mapId = gameState.player.currentMapId;
+      const progress = gameState.mapProgress[mapId];
+      if (!progress) {
+        return { success: false, message: 'マップ進捗情報が取得できません。' };
+      }
+
+      const { x, y } = gameState.player.pos;
+      const directions = [
+        { dx: 0, dy: -1 }, // up
+        { dx: 0, dy: 1 },  // down
+        { dx: -1, dy: 0 }, // left
+        { dx: 1, dy: 0 },  // right
+      ];
+
+      let repaired = false;
+      directions.forEach(({ dx, dy }) => {
+        const checkX = x + dx;
+        const checkY = y + dy;
+        if (MAP.isWithinMap(map, checkX, checkY)) {
+          const tile = MAP.getTileAt(map, checkX, checkY);
+          if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
+            // 修復済みタイル座標を記録
+            const tileKey = `${checkX},${checkY}`;
+            if (!progress.repairedTiles.includes(tileKey)) {
+              progress.repairedTiles.push(tileKey);
+              repaired = true;
+            }
+          }
+        }
+      });
+
+      if (!repaired) {
+        return { success: false, message: '近くに壊れた橋がありません。' };
+      }
+
+      STATE.consumeItemFromInventory(gameState, itemId, 1);
+      return { success: true, message: '壊れた橋を修復しました。' };
+    }
     default:
       return { success: false, message: 'このアイテムは探索中に使えません。' };
   }

@@ -26,6 +26,19 @@ function canMoveTo(gameState, newX, newY) {
   const tile = MAP.getTileAt(map, newX, newY);
   if (tile === null) return false;
 
+  // 壊れた橋の場合、修復済みかチェック
+  if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
+    const mapId = gameState.player.currentMapId;
+    const progress = gameState.mapProgress[mapId];
+    if (progress) {
+      const tileKey = `${newX},${newY}`;
+      if (progress.repairedTiles.includes(tileKey)) {
+        return true; // 修復済みなので移動可能
+      }
+    }
+    return false; // 未修復なので移動不可
+  }
+
   return MAP.isTilePassable(tile);
 }
 

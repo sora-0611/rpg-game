@@ -161,18 +161,21 @@ function createNewGameState() {
         bossDefeated: false,
         openedChestIds: [],
         visitedPositions: [],
+        repairedTiles: [],
       },
       2: {
         visited: false,
         bossDefeated: false,
         openedChestIds: [],
         visitedPositions: [],
+        repairedTiles: [],
       },
       3: {
         visited: false,
         bossDefeated: false,
         openedChestIds: [],
         visitedPositions: [],
+        repairedTiles: [],
       },
     },
 
@@ -290,6 +293,7 @@ function sanitizeGameState(state) {
         bossDefeated: false,
         openedChestIds: [],
         visitedPositions: [],
+        repairedTiles: [],
       };
     }
     const progress = state.mapProgress[mapId];
@@ -297,6 +301,7 @@ function sanitizeGameState(state) {
     if (typeof progress.bossDefeated !== 'boolean') progress.bossDefeated = false;
     if (!Array.isArray(progress.openedChestIds)) progress.openedChestIds = [];
     if (!Array.isArray(progress.visitedPositions)) progress.visitedPositions = [];
+    if (!Array.isArray(progress.repairedTiles)) progress.repairedTiles = [];
   });
 
   // 戦闘状態の補正

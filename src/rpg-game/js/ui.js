@@ -239,6 +239,10 @@ function drawExploreMap(gameState) {
   const map = MAP.getMap(gameState.player.currentMapId);
   if (!map) return;
 
+  const mapId = gameState.player.currentMapId;
+  const progress = gameState.mapProgress[mapId];
+  const repairedTiles = progress ? progress.repairedTiles : [];
+
   const tileSize = Math.floor(Math.min(canvas.width / map.width, canvas.height / map.height));
   const offsetX = Math.floor((canvas.width - tileSize * map.width) / 2);
   const offsetY = Math.floor((canvas.height - tileSize * map.height) / 2);
@@ -248,6 +252,7 @@ function drawExploreMap(gameState) {
     [MAP.TILE_TYPE.PATH]: '#D6B27C',
     [MAP.TILE_TYPE.RIVER]: '#4AA8E7',
     [MAP.TILE_TYPE.BRIDGE]: '#8B6642',
+    [MAP.TILE_TYPE.BROKEN_BRIDGE]: '#140907',
   };
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -256,7 +261,16 @@ function drawExploreMap(gameState) {
 
   map.tiles.forEach((row, y) => {
     row.forEach((tile, x) => {
-      ctx.fillStyle = tileColors[tile] || '#666666';
+      // 修復済みの壊れた橋は橋として描画
+      let displayTile = tile;
+      if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
+        const tileKey = `${x},${y}`;
+        if (repairedTiles.includes(tileKey)) {
+          displayTile = MAP.TILE_TYPE.BRIDGE;
+        }
+      }
+
+      ctx.fillStyle = tileColors[displayTile] || '#666666';
       ctx.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize, tileSize);
     });
   });

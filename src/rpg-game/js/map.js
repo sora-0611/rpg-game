@@ -6,10 +6,11 @@
 
 // ===== TILE CONSTANTS =====
 const TILE_TYPE = {
-  GRASS: 0,      // 草（移動可能）
-  PATH: 1,       // 道（移動可能）
-  RIVER: 2,      // 川（移動不可）
-  BRIDGE: 3,     // 橋（移動可能）
+  GRASS: 0,           // 草（移動可能）
+  PATH: 1,            // 道（移動可能）
+  RIVER: 2,           // 川（移動不可）
+  BRIDGE: 3,          // 橋（移動可能）
+  BROKEN_BRIDGE: 4,   // 壊れた橋（修復まで移動不可）
 };
 
 // ===== MAP UTILITY FUNCTIONS =====
@@ -25,11 +26,12 @@ function getMap(mapId) {
 
 /**
  * タイルが移動可能か判定
+ * 壊れた橋は修復まで移動不可
  * @param {number} tileType
  * @return {boolean}
  */
 function isTilePassable(tileType) {
-  return tileType !== TILE_TYPE.RIVER;
+  return tileType !== TILE_TYPE.RIVER && tileType !== TILE_TYPE.BROKEN_BRIDGE;
 }
 
 /**
