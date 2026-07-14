@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RPG GAME</title>
-  <link rel="stylesheet" href="./styles/shared/style.css" />
-  <link rel="stylesheet" href="./styles/shared/loading.css" />
+  <link rel="stylesheet" href="./shared/css/style.css" />
+  <link rel="stylesheet" href="./shared/css/loading.css" />
+  <link rel="stylesheet" href="./shared/css/title.css" />
 </head>
 <body>
   <div id="app" class="game-container">
@@ -14,15 +15,18 @@
     </section>
   </div>
 
-  <script src="./scripts/title/title-screen-manager.js"></script>
-  <script src="./scripts/title/screens/loading.js"></script>
+  <div id="rotate-warning" role="alert">画面を横向きにしてください</div>
+
+  <script src="./shared/js/bgm.js"></script>
+  <script src="./shared/js/screenManager.js"></script>
+  <script src="./shared/js/save.js"></script>
+  <script src="./shared/js/screens/loading.js"></script>
+  <script src="./shared/js/main.js"></script>
   <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      RPG.initLoadingScreen({
-        onFinished: function () {
-          window.location.href = './pages/title/title-page.html';
-        }
-      });
+    RPG.initLoadingScreen({
+      onFinished: function () {
+        window.location.href = './pages/title/title.html';
+      }
     });
   </script>
 </body>

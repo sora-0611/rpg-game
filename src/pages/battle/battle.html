@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>戦闘画面</title>
+<link rel="stylesheet" href="battle.css" />
+</head>
+<body>
+<div class="battle-screen" id="battle-screen">
+  <!-- 敵関連: 敵イメージ、HP関連 -->
+  <section class="enemy-area">
+    <div class="enemy-box" id="enemy-box">
+      <div class="avatar-placeholder" id="enemy-avatar">敵</div>
+      <div class="enemy-name" id="enemy-name">敵</div>
+      <div class="enemy-rank-tag" id="enemy-rank-tag"></div>
+      <div class="enemy-stats-line" id="enemy-stats-line"></div>
+    </div>
+    <div class="hp-block" id="enemy-hp-block">
+      <div class="hp-block-row">
+        <span class="hp-label">HP</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="enemy-hp-fill"></div></div>
+      </div>
+      <span class="hp-value" id="enemy-hp-value"></span>
+    </div>
+  </section>
+
+  <!-- プレイヤー関連: 行動中キャラクターのHP（ワイヤーフレーム通り別枠）とイメージ表示 -->
+  <section class="player-area">
+    <div class="hp-block player-hp-block" id="player-hp-block">
+      <div class="hp-block-row">
+        <span class="hp-label">HP</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="player-hp-fill"></div></div>
+      </div>
+      <span class="hp-value" id="player-hp-value"></span>
+    </div>
+    <div class="player-box" id="player-box">
+      <div class="avatar-placeholder" id="player-avatar"></div>
+      <div class="player-info">
+        <div class="player-name" id="player-name"></div>
+        <div class="player-stats-line" id="player-stats-line"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- コマンド: 戦う/防御/アイテム/逃げる -->
+  <section class="command-area" id="command-area">
+    <div class="command-buttons">
+      <button class="command-button" id="btn-fight">戦う</button>
+      <button class="command-button" id="btn-item">アイテム</button>
+      <button class="command-button" id="btn-defend">防御</button>
+      <button class="command-button" id="btn-flee">逃げる</button>
+      <button class="command-button command-end" id="btn-end" hidden disabled>戦闘終了</button>
+    </div>
+  </section>
+
+  <!-- パーティ全員のHP・状態一覧（行動中キャラだけでなく全員を常時表示する）。コマンドエリアとは独立して固定位置に表示 -->
+  <ul class="party-status" id="party-status"></ul>
+
+  <!-- テキストウィンドウ: イベントテキスト / 確認はい・いいえ -->
+  <section class="message-window" id="message-window" aria-live="polite">
+    <p class="message-text" id="message-text"></p>
+    <div class="confirm-buttons" id="confirm-buttons" hidden>
+      <button class="text-button" id="confirm-yes">はい</button>
+      <button class="text-button" id="confirm-no">いいえ</button>
+    </div>
+  </section>
+
+  <!-- アイテムウィンドウ -->
+  <aside class="side-window item-window" id="item-window" hidden>
+    <div class="side-window-header">アイテム</div>
+    <ul class="item-list" id="item-list"></ul>
+    <button class="close-button" id="item-close-button">×閉じる</button>
+  </aside>
+
+  <!-- 逃げるウィンドウ -->
+  <aside class="side-window flee-window" id="flee-window" hidden>
+    <div class="side-window-header">逃げる</div>
+    <div class="flee-window-body">
+      <button class="text-button" id="flee-yes-button">逃げる</button>
+      <button class="text-button" id="flee-no-button">逃げない</button>
+    </div>
+    <button class="close-button" id="flee-close-button">×閉じる</button>
+  </aside>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="./data.js"></script>
+<script src="./bridge.js"></script>
+<script src="./battle.js"></script>
+</body>
+</html>
