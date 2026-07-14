@@ -17,6 +17,12 @@ function updateBgmVolume(value) {
     const nextVolume = Number(value);
     gameSettings.bgmVolume = nextVolume;
 
+    // bgm.js の内部状態に反映（セッション中は維持される）
+    if (window.bgmManager && typeof window.bgmManager.setVolume === 'function') {
+        window.bgmManager.setVolume(nextVolume);
+        return; // bgmManager.setVolume() が再生を管理する
+    }
+
     if (!bgmAudio) {
         return;
     }
@@ -88,6 +94,13 @@ function updateSliderFill(slider) {
 
 // 初期化時にスライダーのフィルバーを設定
 document.querySelectorAll('.slider').forEach(slider => {
+    // BGM音量スライダーの場合、セッションストレージから復元
+    if (slider.id === 'bgm-volume' && window.bgmManager && typeof window.bgmManager.getVolume === 'function') {
+        const currentBgmVolume = window.bgmManager.getVolume();
+        slider.value = currentBgmVolume;
+        gameSettings.bgmVolume = currentBgmVolume;
+    }
+
     updateSliderFill(slider);
 
     const wrapper = slider.closest('.slider-wrapper');

@@ -87,7 +87,7 @@ const ITEMS = Object.freeze({
   // 回復アイテム
   'heal_1': Object.freeze({
     itemId: 'heal_1',
-    name: '回復ポーション★',
+    name: '回復アイテム★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
@@ -96,7 +96,7 @@ const ITEMS = Object.freeze({
   }),
   'heal_2': Object.freeze({
     itemId: 'heal_2',
-    name: '回復ポーション★★',
+    name: '回復アイテム★★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
@@ -105,7 +105,7 @@ const ITEMS = Object.freeze({
   }),
   'heal_3': Object.freeze({
     itemId: 'heal_3',
-    name: '回復ポーション★★★',
+    name: '回復アイテム★★★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
@@ -116,7 +116,7 @@ const ITEMS = Object.freeze({
   // 全体回復アイテム
   'heal_group_1': Object.freeze({
     itemId: 'heal_group_1',
-    name: '全体回復ポーション★',
+    name: '全体回復アイテム★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
@@ -125,7 +125,7 @@ const ITEMS = Object.freeze({
   }),
   'heal_group_2': Object.freeze({
     itemId: 'heal_group_2',
-    name: '全体回復ポーション★★',
+    name: '全体回復アイテム★★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
@@ -134,7 +134,7 @@ const ITEMS = Object.freeze({
   }),
   'heal_group_3': Object.freeze({
     itemId: 'heal_group_3',
-    name: '全体回復ポーション★★★',
+    name: '全体回復アイテム★★★',
     category: 'recovery',
     usableInExplore: true,
     usableInBattle: true,
