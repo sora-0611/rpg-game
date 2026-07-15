@@ -150,7 +150,7 @@ function applyItemEffectInExplore(gameState, itemId) {
       return { success: true, message: `パーティー全員が${item.effectValue}回復した。` };
     }
     case 'bridge_repair': {
-      // 周辺の壊れた橋を修復
+      // マップ上のすべての壊れた橋を修復
       const map = MAP.getMap(gameState.player.currentMapId);
       if (!map) {
         return { success: false, message: 'マップ情報が取得できません。' };
@@ -162,33 +162,23 @@ function applyItemEffectInExplore(gameState, itemId) {
         return { success: false, message: 'マップ進捗情報が取得できません。' };
       }
 
-      const { x, y } = gameState.player.pos;
-      const directions = [
-        { dx: 0, dy: -1 }, // up
-        { dx: 0, dy: 1 },  // down
-        { dx: -1, dy: 0 }, // left
-        { dx: 1, dy: 0 },  // right
-      ];
-
+      // マップ上の全タイルをスキャンして壊れた橋をすべて修復
       let repaired = false;
-      directions.forEach(({ dx, dy }) => {
-        const checkX = x + dx;
-        const checkY = y + dy;
-        if (MAP.isWithinMap(map, checkX, checkY)) {
-          const tile = MAP.getTileAt(map, checkX, checkY);
+      for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+          const tile = MAP.getTileAt(map, x, y);
           if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
-            // 修復済みタイル座標を記録
-            const tileKey = `${checkX},${checkY}`;
+            const tileKey = `${x},${y}`;
             if (!progress.repairedTiles.includes(tileKey)) {
               progress.repairedTiles.push(tileKey);
               repaired = true;
             }
           }
         }
-      });
+      }
 
       if (!repaired) {
-        return { success: false, message: '近くに壊れた橋がありません。' };
+        return { success: false, message: '壊れた橋は既に修復されています。' };
       }
 
       STATE.consumeItemFromInventory(gameState, itemId, 1);
@@ -209,7 +199,11 @@ function getInventoryItems(gameState) {
     itemId: entry.itemId,
     quantity: entry.quantity,
     data: DATA.ITEMS[entry.itemId] || null,
-  }));
+  })).filter(item => {
+    // categoryが "recovery", "attack", "event" のアイテムを表示
+    const itemData = item.data;
+    return itemData && (itemData.category === 'recovery' || itemData.category === 'attack' || itemData.category === 'event');
+  });
 }
 
 // Export

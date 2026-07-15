@@ -367,6 +367,9 @@ function renderExploreItemWindow(gameState) {
     return;
   }
 
+  // ID順にソート
+  inventoryItems.sort((a, b) => a.itemId.localeCompare(b.itemId));
+
   inventoryItems.forEach(item => {
     const itemData = item.data;
     const isUsable = Boolean(itemData && itemData.usableInExplore);
