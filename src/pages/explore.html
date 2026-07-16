@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>探索画面</title>
-  <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/components.css">
-  <link rel="stylesheet" href="./css/screens.css">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/screens.css">
 </head>
 <body>
   <!-- アプリ全体の土台。各画面はこの中で切り替わる -->
@@ -141,15 +141,15 @@
   <div id="dialog-container" class="dialog-container"></div>
 
   <!-- Scripts (Load order is important) -->
-  <script src="../js/bgm.js"></script>
-  <script src="./js/data.js"></script>
-  <script src="./js/state.js"></script>
-  <script src="./js/map.js"></script>
-  <script src="./js/explore.js"></script>
-  <script src="./js/save.js"></script>
-  <script src="./js/item.js"></script>
-  <script src="./js/ui.js"></script>
-  <script src="./js/main.js"></script>
+  <script src="../scripts/shared/bgm.js"></script>
+  <script src="../scripts/explore/exploreData.js"></script>
+  <script src="../scripts/explore/exploreState.js"></script>
+  <script src="../scripts/explore/exploreMap.js"></script>
+  <script src="../scripts/explore/explore.js"></script>
+  <script src="../scripts/shared/save.js"></script>
+  <script src="../scripts/explore/exploreItem.js"></script>
+  <script src="../scripts/explore/exploreUI.js"></script>
+  <script src="../scripts/explore/exploreMain.js"></script>
 </body>
 </html>
 

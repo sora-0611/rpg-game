@@ -1,16 +1,10 @@
 /**
  * save.js
- * localStorage を使ってゲーム状態を保存・読み込みするファイルです。
- * 画面を閉じても進行を残したいときに使います。
+ * localStorage を使ってゲーム状態を保存・読み込みする共通モジュールです。
  */
 
 const SAVE_KEY = 'rpg-game-save';
 
-/**
- * 保存データが基本構造を満たすか確認
- * @param {any} parsed
- * @return {boolean}
- */
 function isLikelyValidSave(parsed) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return false;
@@ -27,15 +21,23 @@ function isLikelyValidSave(parsed) {
   return true;
 }
 
-/**
- * ゲーム状態を localStorage に保存
- * @param {Object} gameState
- * @return {boolean}
- */
+function sanitizeLoadedSave(parsed) {
+  if (window.STATE && typeof window.STATE.sanitizeGameState === 'function') {
+    try {
+      return window.STATE.sanitizeGameState(parsed);
+    } catch (error) {
+      console.warn('SAVE: sanitizeGameState failed.', error);
+      return parsed;
+    }
+  }
+  return parsed;
+}
+
 function saveGameStateToStorage(gameState) {
   if (!gameState || typeof gameState !== 'object') {
     return false;
   }
+
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
     return true;
@@ -45,10 +47,6 @@ function saveGameStateToStorage(gameState) {
   }
 }
 
-/**
- * localStorage からセーブデータを読み込む
- * @return {Object|null}
- */
 function loadSavedGameState() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) {
@@ -61,8 +59,11 @@ function loadSavedGameState() {
       console.warn('セーブデータが破損しています。');
       return null;
     }
-    const sanitized = STATE.sanitizeGameState(parsed);
-    sanitized.isLoaded = true;
+
+    const sanitized = sanitizeLoadedSave(parsed);
+    if (sanitized && typeof sanitized === 'object') {
+      sanitized.isLoaded = true;
+    }
     return sanitized;
   } catch (error) {
     console.warn('セーブデータの読み込みに失敗しました。', error);
@@ -70,19 +71,30 @@ function loadSavedGameState() {
   }
 }
 
-/**
- * セーブデータが存在するか
- * @return {boolean}
- */
 function hasSavedGame() {
   return localStorage.getItem(SAVE_KEY) !== null;
 }
 
-/**
- * セーブデータを削除する
- */
+function hasSaveData() {
+  return hasSavedGame();
+}
+
 function deleteSavedGame() {
   localStorage.removeItem(SAVE_KEY);
+}
+
+function isSaveDataValid() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return isLikelyValidSave(parsed);
+  } catch (error) {
+    return false;
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -91,8 +103,17 @@ if (typeof window !== 'undefined') {
     loadSavedGameState,
     hasSavedGame,
     deleteSavedGame,
+    isSaveDataValid,
   };
 
-  // battle.js may call window.saveGameState directly
   window.saveGameState = saveGameStateToStorage;
+
+  window.RPG = window.RPG || {};
+  window.RPG.Save = {
+    hasSaveData,
+    loadSavedGameState,
+    saveGameState: saveGameStateToStorage,
+    isSaveDataValid,
+    clearSaveData: deleteSavedGame,
+  };
 }

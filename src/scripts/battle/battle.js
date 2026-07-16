@@ -500,7 +500,7 @@
       return;
     }
     applyBattleResultToGameState();
-    window.location.assign("../rpg-game/explore.html");
+    window.location.assign("explore.html");
   }
 
   // ---------- メッセージ / 確認 ----------

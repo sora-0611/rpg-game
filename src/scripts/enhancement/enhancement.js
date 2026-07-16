@@ -1,4 +1,4 @@
-// 実際の進行状況（コイン・パーティーの強化状態）を rpg-game 側のセーブデータから読み込んで表示します。
+// 実際の進行状況（コイン・パーティーの強化状態）を shared/save.js のセーブデータから読み込んで表示します。
 const gameState = (window.SAVE && SAVE.hasSavedGame())
     ? SAVE.loadSavedGameState()
     : STATE.sanitizeGameState(STATE.createNewGameState());
@@ -109,7 +109,7 @@ function renderAllCards() {
 function setupBackButton() {
     const backButton = document.querySelector('.back-button');
     backButton.addEventListener('click', () => {
-        window.location.href = 'rpg-game/explore.html';
+        window.location.href = 'explore.html';
     });
 }
 

@@ -574,7 +574,7 @@ function initializeUI() {
   const btnMenuUpgrade = document.getElementById('btn-menu-upgrade');
   if (btnMenuUpgrade) {
     btnMenuUpgrade.addEventListener('click', () => {
-      window.location.href = '../enhancement.html';
+      window.location.href = 'enhancement.html';
     });
   }
 
@@ -591,7 +591,7 @@ function initializeUI() {
   const btnMenuSettings = document.getElementById('btn-menu-settings');
   if (btnMenuSettings) {
     btnMenuSettings.addEventListener('click', () => {
-      window.location.href = '../settings.html?from=explore';
+      window.location.href = 'settings.html?from=explore';
     });
   }
 
@@ -736,7 +736,7 @@ function handleExploreMove(direction) {
     const rpgEnemyId = gameState.battle.currentEnemyId || 'slime_1';
     const battleEnemyId = ENEMY_ID_TO_BATTLE[rpgEnemyId] || 'mob1';
     window.SAVE.saveGameState(gameState);
-    window.location.assign(`../battle/index.html?enemy=${encodeURIComponent(battleEnemyId)}`);
+    window.location.assign(`battle.html?enemy=${encodeURIComponent(battleEnemyId)}`);
     return;
   }
 

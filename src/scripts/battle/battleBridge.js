@@ -1,8 +1,8 @@
 /**
  * bridge.js
- * 戦闘画面(src/battle)と探索画面(src/rpg-game)の橋渡し。
+ * 戦闘画面(src/pages)と探索画面(src/pages)の橋渡し。
  * 両者は敵ID・アイテムIDのスキーマが異なる（数値 vs 文字列）ため、ここで対応表を持つ。
- * localStorage の 'rpg-game-save' キーを直接読み書きし、rpg-game側の gameState を引き継ぐ。
+ * localStorage の 'rpg-game-save' キーを直接読み書きし、探索側の gameState を引き継ぐ。
  */
 (function () {
   "use strict";
@@ -50,7 +50,7 @@
     bridge_repair_kit: 11,
   };
 
-  const SAVE_KEY = "rpg-game-save"; // src/rpg-game/js/save.js と同じキー
+  const SAVE_KEY = "rpg-game-save"; // src/scripts/shared/save.js で使うキーと同じ
 
   function readRawGameState() {
     try {

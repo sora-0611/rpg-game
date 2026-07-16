@@ -219,15 +219,13 @@ if (backButton) {
         let targetPage = 'index.html';
 
         if (fromParam === 'explore') {
-            targetPage = './rpg-game/explore.html';
+            targetPage = 'explore.html';
         } else if (fromParam === 'title') {
-            targetPage = 'index.html';
-        } else if (referrerPage === 'tansaku.html') {// 探索画面から来た場合は探索画面に戻る.
-            targetPage = 'tansaku.html';
-        } else if (referrerUrl && referrerUrl.pathname.includes('rpg-game')) {
-            targetPage = './rpg-game/explore.html';
+            targetPage = '../index.html';
+        } else if (referrerPage === 'explore.html') {
+            targetPage = 'explore.html';
         } else if (referrerPage === 'index.html') {// タイトル画面から来た場合はタイトル画面に戻る.
-            targetPage = 'index.html';
+            targetPage = '../index.html';
         }
 
         window.location.href = targetPage;
