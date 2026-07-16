@@ -75,6 +75,7 @@ const ITEM_MASTER = {
   8: { itemId: 8, name: "攻撃アイテム★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 20, dropRate: 60 },
   9: { itemId: 9, name: "攻撃アイテム★★★", category: "戦闘", usableInExplore: false, usableInBattle: true, effectType: "ダメージ", target: "enemy", effectValue: 30, dropRate: 20 },
   10: { itemId: 10, name: "マップの鍵", category: "探索イベント用", usableInExplore: true, usableInBattle: false, effectType: "イベント", target: "none", effectValue: 0 },
+  11: { itemId: 11, name: "橋修復キット", category: "探索イベント用", usableInExplore: true, usableInBattle: false, effectType: "イベント", target: "none", effectValue: 0, dropRate: 0 },
 };
 
 // 戦闘勝利時のドロップ候補プール（バランス仕様書「ドロップする場所」列に対応）

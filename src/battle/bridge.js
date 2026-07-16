@@ -35,6 +35,7 @@
     7: "dmg_1",
     8: "dmg_2",
     9: "dmg_3",
+    11: "bridge_repair_kit",
   };
   const ITEM_ID_TO_BATTLE = {
     heal_1: 1,
@@ -46,6 +47,7 @@
     dmg_1: 7,
     dmg_2: 8,
     dmg_3: 9,
+    bridge_repair_kit: 11,
   };
 
   const SAVE_KEY = "rpg-game-save"; // src/rpg-game/js/save.js と同じキー

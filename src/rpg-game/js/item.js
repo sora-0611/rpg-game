@@ -150,7 +150,8 @@ function applyItemEffectInExplore(gameState, itemId) {
       return { success: true, message: `パーティー全員が${item.effectValue}回復した。` };
     }
     case 'bridge_repair': {
-      // マップ上のすべての壊れた橋を修復
+      // プレイヤーの周囲（上下左右）にある壊れた橋を起点として
+      // その連結している壊れた橋領域をすべて修復する
       const map = MAP.getMap(gameState.player.currentMapId);
       if (!map) {
         return { success: false, message: 'マップ情報が取得できません。' };
@@ -162,25 +163,52 @@ function applyItemEffectInExplore(gameState, itemId) {
         return { success: false, message: 'マップ進捗情報が取得できません。' };
       }
 
-      // マップ上の全タイルをスキャンして壊れた橋をすべて修復
-      let repaired = false;
-      for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-          const tile = MAP.getTileAt(map, x, y);
-          if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
-            const tileKey = `${x},${y}`;
-            if (!progress.repairedTiles.includes(tileKey)) {
-              progress.repairedTiles.push(tileKey);
-              repaired = true;
-            }
+      const px = gameState.player.pos.x;
+      const py = gameState.player.pos.y;
+      const dirs = [ [0, -1], [0, 1], [-1, 0], [1, 0] ];
+
+      // 探索用のスタックを用意して、隣接する壊れた橋を起点にDFSで連結領域を取得
+      const toVisit = [];
+      const willRepair = new Set();
+
+      for (const d of dirs) {
+        const sx = px + d[0];
+        const sy = py + d[1];
+        if (!MAP.isWithinMap(map, sx, sy)) continue;
+        if (MAP.getTileAt(map, sx, sy) === MAP.TILE_TYPE.BROKEN_BRIDGE) {
+          const key = `${sx},${sy}`;
+          if (!progress.repairedTiles.includes(key)) {
+            toVisit.push([sx, sy]);
           }
         }
       }
 
-      if (!repaired) {
-        return { success: false, message: '壊れた橋は既に修復されています。' };
+      while (toVisit.length > 0) {
+        const [x, y] = toVisit.pop();
+        const key = `${x},${y}`;
+        if (willRepair.has(key) || progress.repairedTiles.includes(key)) continue;
+        willRepair.add(key);
+
+        // 4方向を調べ、壊れた橋で未修復のものを積む
+        const nbs = [ [0, -1], [0, 1], [-1, 0], [1, 0] ];
+        for (const nb of nbs) {
+          const nx = x + nb[0];
+          const ny = y + nb[1];
+          if (!MAP.isWithinMap(map, nx, ny)) continue;
+          const t = MAP.getTileAt(map, nx, ny);
+          const nkey = `${nx},${ny}`;
+          if (t === MAP.TILE_TYPE.BROKEN_BRIDGE && !willRepair.has(nkey) && !progress.repairedTiles.includes(nkey)) {
+            toVisit.push([nx, ny]);
+          }
+        }
       }
 
+      if (willRepair.size === 0) {
+        return { success: false, message: '壊れた橋の前で使用してください。' };
+      }
+
+      // 修復対象を progress.repairedTiles に追加
+      willRepair.forEach(k => progress.repairedTiles.push(k));
       STATE.consumeItemFromInventory(gameState, itemId, 1);
       return { success: true, message: '壊れた橋を修復しました。' };
     }
