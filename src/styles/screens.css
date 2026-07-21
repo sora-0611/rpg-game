@@ -756,3 +756,265 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
+
+/* ===== EXPLORE EFFECTS ===== */
+/* 演出レイヤーは操作を妨げず、ゲーム状態にも影響しない。 */
+.explore-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* 移動不可: マップを小さく横揺れさせる。 */
+.explore-container.is-move-blocked .explore-map {
+  animation: explore-blocked 300ms ease-out both;
+}
+
+/* 通常敵との遭遇: 暗い赤の点滅と拡大で戦闘への移行を示す。 */
+.explore-container.is-enemy-encounter::after {
+  background: rgba(100, 8, 20, 0.68);
+  animation: explore-encounter 600ms steps(4, end) both;
+}
+
+.explore-container.is-enemy-encounter #canvas-map {
+  animation: explore-encounter-zoom 600ms ease-in both;
+}
+
+/* ボス遭遇: 通常敵より長く、強い赤と振動を使用する。 */
+.explore-container.is-boss-encounter::after {
+  background: radial-gradient(circle, rgba(255, 107, 107, 0.4), rgba(45, 0, 8, 0.92));
+  animation: explore-boss-flash 850ms ease-in both;
+}
+
+.explore-container.is-boss-encounter .explore-map {
+  animation: explore-boss-shake 850ms ease-in both;
+}
+
+@keyframes explore-blocked {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-7px); }
+  50%      { transform: translateX(6px); }
+  75%      { transform: translateX(-3px); }
+}
+
+@keyframes explore-encounter {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.85; }
+  40%  { opacity: 0.15; }
+  65%  { opacity: 1; }
+  100% { opacity: 1; background: #050208; }
+}
+
+@keyframes explore-encounter-zoom {
+  0%   { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.12); filter: brightness(0.35) saturate(1.5); }
+}
+
+@keyframes explore-boss-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  38%  { opacity: 0.25; }
+  58%  { opacity: 1; }
+  100% { opacity: 1; background: #180006; }
+}
+
+@keyframes explore-boss-shake {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  15%      { transform: translate(-9px, 3px) scale(1.01); }
+  30%      { transform: translate(8px, -3px) scale(1.02); }
+  45%      { transform: translate(-6px, 2px) scale(1.03); }
+  60%      { transform: translate(5px, -2px) scale(1.04); }
+  78%      { transform: translate(-3px, 1px) scale(1.05); }
+}
+
+/* 動きを減らす設定では、位置移動をやめて明るさと透明度だけを変える。 */
+@media (prefers-reduced-motion: reduce) {
+  .explore-container.is-move-blocked .explore-map,
+  .explore-container.is-enemy-encounter #canvas-map,
+  .explore-container.is-boss-encounter .explore-map {
+    animation: explore-reduced 240ms ease-out both;
+  }
+
+  @keyframes explore-reduced {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.45); }
+  }
+}
+
+
+/* ===== EXPLORE VISUAL POLISH ===== */
+/* 背景に奥行きのある光を重ね、単色の画面に見えないようにする。 */
+.explore-container {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(67, 140, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(157, 124, 255, 0.12), transparent 34%),
+    linear-gradient(145deg, #07101f 0%, #101a31 48%, #070b16 100%);
+}
+
+/* 常時ゆっくり動く環境光。操作と無関係なため、移動時に画面は弾まない。 */
+.explore-container::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.38;
+  background:
+    radial-gradient(circle, var(--explore-ambient-blue) 0 2%, transparent 18%),
+    radial-gradient(circle at 70% 30%, var(--explore-ambient-purple), transparent 22%);
+  animation: explore-ambient-light var(--explore-ambient-duration) ease-in-out infinite alternate;
+}
+
+.explore-topbar,
+.explore-map,
+.explore-status-panel,
+.explore-container > .message-window {
+  position: relative;
+  z-index: 1;
+}
+
+.explore-topbar {
+  background: linear-gradient(180deg, rgba(30, 47, 79, 0.96), rgba(15, 26, 48, 0.96));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), inset 0 -1px rgba(115, 167, 255, 0.16);
+  backdrop-filter: blur(8px);
+}
+
+.explore-coin-display {
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.45);
+}
+
+.explore-map {
+  position: relative;
+  margin: 10px 14px;
+  padding: 18px;
+  border: 1px solid rgba(134, 177, 255, 0.26);
+  border-radius: 18px;
+  background:
+    linear-gradient(rgba(4, 9, 20, 0.72), rgba(10, 18, 36, 0.88)),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,0.015) 3px 4px);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.42),
+    inset 0 0 40px rgba(67, 140, 255, 0.08),
+    0 0 0 4px rgba(8, 15, 29, 0.68);
+  overflow: hidden;
+}
+
+/* マップ上を横切る薄い光で、静止画のような印象を減らす。 */
+.explore-map::before {
+  content: "";
+  position: absolute;
+  inset: -60% -25%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 42%, rgba(110, 176, 255, 0.08) 49%, rgba(255,255,255,0.09) 50%, transparent 57%);
+  transform: translateX(-38%);
+  animation: explore-map-sheen var(--explore-sheen-duration) ease-in-out infinite;
+}
+
+/* 四隅を暗くして視線を中央のマップへ誘導する。 */
+.explore-map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 58px rgba(0, 0, 0, 0.56);
+}
+
+#canvas-map {
+  position: relative;
+  z-index: 1;
+  border-radius: 8px;
+  filter: saturate(1.08) contrast(1.03);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.42), 0 0 26px rgba(76, 137, 255, 0.12);
+}
+
+.explore-status-panel {
+  background: linear-gradient(180deg, rgba(24, 38, 65, 0.94), rgba(12, 22, 41, 0.97));
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.25), inset 0 1px rgba(255,255,255,0.05);
+}
+
+.explore-status-panel .card {
+  background: linear-gradient(145deg, rgba(41, 61, 98, 0.92), rgba(24, 38, 66, 0.96));
+  border-color: rgba(132, 176, 255, 0.22);
+  box-shadow: inset 0 1px rgba(255,255,255,0.05), 0 6px 14px rgba(0,0,0,0.18);
+}
+
+.explore-container > .message-window {
+  border: 1px solid rgba(129, 174, 255, 0.24);
+  background: linear-gradient(180deg, rgba(27, 43, 72, 0.96), rgba(14, 25, 46, 0.98));
+  box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 3px 0 var(--color-primary);
+}
+
+@keyframes explore-ambient-light {
+  0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+  100% { transform: translate3d(4%, 3%, 0) rotate(7deg); }
+}
+
+@keyframes explore-map-sheen {
+  0%, 28%  { transform: translateX(-42%); opacity: 0; }
+  42%      { opacity: 1; }
+  62%, 100% { transform: translateX(42%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explore-container::before,
+  .explore-map::before {
+    animation: none;
+  }
+}
+
+
+/* ===== EXPLORE CUSTOM PROPERTIES ===== */
+/*
+ * 探索画面の色や速度をカスタマイズするときは、まずここを変更する。
+ * JavaScriptの処理を触らずに、画面の雰囲気だけを変更できる。
+ */
+:root {
+  --explore-ambient-blue: rgba(67, 140, 255, 0.18);
+  --explore-ambient-purple: var(--explore-ambient-purple);
+  --explore-panel-border: rgba(134, 177, 255, 0.26);
+  --explore-panel-shadow: rgba(0, 0, 0, 0.42);
+  --explore-danger: #ff5a69;
+  --explore-ambient-duration: 14s;
+  --explore-sheen-duration: 9s;
+}
+
+
+
+
+
+/* ===== LARGE EXPLORE MAP ===== */
+/*
+ * 横30マスのマップ3は、通常マップより大きいCanvasで表示する。
+ * 横幅を優先してマップエリアいっぱいに広げつつ、画面より大きい場合は
+ * max-width / max-height により縦横比を保ったまま縮小する。
+ */
+#canvas-map.canvas-map--large {
+  width: min(100%, 900px);
+  height: auto;
+  max-height: 100%;
+}
+
+/* マップ3では表示領域の余白を少し減らし、盤面自体を大きく見せる。 */
+.explore-map:has(#canvas-map.canvas-map--large) {
+  padding: 10px;
+}
+
+/* :has()を使えない古いブラウザでも、Canvas自体の拡大指定は有効。 */
+@media (max-width: 760px) {
+  #canvas-map.canvas-map--large {
+    width: 100%;
+    min-width: 600px;
+  }
+
+  .explore-map:has(#canvas-map.canvas-map--large) {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+}

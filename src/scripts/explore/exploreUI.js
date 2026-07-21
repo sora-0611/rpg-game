@@ -12,6 +12,19 @@ const SCREEN_MAP = {
   UPGRADE: 'screen-upgrade',
 };
 
+// ===== EXPLORE EFFECT SETTINGS =====
+/**
+ * 探索中のイベント演出時間。数値を変更すれば演出速度を調整できる。
+ */
+const EXPLORE_EFFECT_CONFIG = Object.freeze({
+  blockedMoveDurationMs: 300,
+  enemyEncounterDurationMs: 600,
+  bossEncounterDurationMs: 850,
+});
+
+// プレイヤーが最後に向いた方向。セーブ対象ではなく、表示だけに使用する。
+let explorePlayerDirection = 'down';
+
 // ===== UTILITY FUNCTIONS =====
 
 /**
@@ -233,94 +246,299 @@ function drawExploreMap(gameState) {
   const canvas = document.getElementById('canvas-map');
   if (!canvas || !canvas.getContext) return;
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
   const map = MAP.getMap(gameState.player.currentMapId);
   if (!map) return;
+
+  /**
+   * マップごとにCanvasの内部解像度を調整する。
+   * 従来は全マップが400×400固定だったため、横30マスあるマップ3では
+   * 1マスが約13pxまで縮小され、キャラクターや地形が見えづらくなっていた。
+   * マップ3だけ1マス24pxを確保し、横長の720×384として描画する。
+   */
+  const isLargeMap = map.width >= 24;
+  const targetTileSize = isLargeMap ? 24 : 28;
+  const requiredWidth = map.width * targetTileSize;
+  const requiredHeight = map.height * targetTileSize;
+
+  // サイズが変わる場合だけ更新する。width/heightの代入はCanvasを初期化するため、
+  // 毎回無条件に代入すると不要な再初期化が発生する。
+  if (canvas.width !== requiredWidth) canvas.width = requiredWidth;
+  if (canvas.height !== requiredHeight) canvas.height = requiredHeight;
+
+  // CSS側でもマップ3専用の表示ルールを適用できるようクラスを切り替える。
+  canvas.classList.toggle('canvas-map--large', isLargeMap);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
   const mapId = gameState.player.currentMapId;
   const progress = gameState.mapProgress[mapId];
   const repairedTiles = progress ? progress.repairedTiles : [];
+  const openedChestIds = progress ? progress.openedChestIds : [];
 
   const tileSize = Math.floor(Math.min(canvas.width / map.width, canvas.height / map.height));
   const offsetX = Math.floor((canvas.width - tileSize * map.width) / 2);
   const offsetY = Math.floor((canvas.height - tileSize * map.height) / 2);
 
-  const tileColors = {
-    [MAP.TILE_TYPE.GRASS]: '#6DA34D',
-    [MAP.TILE_TYPE.PATH]: '#D6B27C',
-    [MAP.TILE_TYPE.RIVER]: '#4AA8E7',
-    [MAP.TILE_TYPE.BRIDGE]: '#8B6642',
-    [MAP.TILE_TYPE.BROKEN_BRIDGE]: '#140907',
-  };
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#000000';
+
+  // マップ外周を濃紺のグラデーションにし、盤面を浮かび上がらせる。
+  const outerBackground = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, 0,
+    canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+  );
+  outerBackground.addColorStop(0, '#17233b');
+  outerBackground.addColorStop(1, '#030712');
+  ctx.fillStyle = outerBackground;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  map.tiles.forEach((row, y) => {
-    row.forEach((tile, x) => {
-      // 修復済みの壊れた橋は橋として描画
-      let displayTile = tile;
-      if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
-        const tileKey = `${x},${y}`;
-        if (repairedTiles.includes(tileKey)) {
-          displayTile = MAP.TILE_TYPE.BRIDGE;
-        }
+  /** 座標から毎回同じ0～1の値を作る。草や道の模様が描画ごとにちらつくのを防ぐ。 */
+  const coordinateNoise = (x, y, salt = 0) => {
+    const value = Math.sin(x * 12.9898 + y * 78.233 + salt * 37.719) * 43758.5453;
+    return value - Math.floor(value);
+  };
+
+  /** 1マスを、地形ごとの陰影・模様付きで描画する。 */
+  const drawDecoratedTile = (tile, x, y) => {
+    const px = offsetX + x * tileSize;
+    const py = offsetY + y * tileSize;
+    const tileGradient = ctx.createLinearGradient(px, py, px + tileSize, py + tileSize);
+
+    const colors = {
+      [MAP.TILE_TYPE.GRASS]: ['#79b956', '#4f813c'],
+      [MAP.TILE_TYPE.PATH]: ['#e3c38e', '#b98d59'],
+      [MAP.TILE_TYPE.RIVER]: ['#57bdf1', '#256fae'],
+      [MAP.TILE_TYPE.BRIDGE]: ['#a67a4d', '#694728'],
+      [MAP.TILE_TYPE.BROKEN_BRIDGE]: ['#34201b', '#100807'],
+    };
+    const pair = colors[tile] || ['#777', '#444'];
+    tileGradient.addColorStop(0, pair[0]);
+    tileGradient.addColorStop(1, pair[1]);
+    ctx.fillStyle = tileGradient;
+    ctx.fillRect(px, py, tileSize, tileSize);
+
+    // 左上に光、右下に影を入れてタイルに厚みを出す。
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(px + 0.5, py + tileSize - 0.5);
+    ctx.lineTo(px + 0.5, py + 0.5);
+    ctx.lineTo(px + tileSize - 0.5, py + 0.5);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(px + tileSize - 0.5, py + 0.5);
+    ctx.lineTo(px + tileSize - 0.5, py + tileSize - 0.5);
+    ctx.lineTo(px + 0.5, py + tileSize - 0.5);
+    ctx.stroke();
+
+    if (tile === MAP.TILE_TYPE.GRASS && tileSize >= 8) {
+      // 草むらには固定位置の小さな葉を描き、単色の盤面に見えないようにする。
+      ctx.strokeStyle = 'rgba(226,255,190,0.35)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 2; i += 1) {
+        const gx = px + 2 + coordinateNoise(x, y, i) * Math.max(1, tileSize - 4);
+        const gy = py + 3 + coordinateNoise(x, y, i + 4) * Math.max(1, tileSize - 5);
+        ctx.beginPath();
+        ctx.moveTo(gx, gy + 2);
+        ctx.lineTo(gx - 1, gy);
+        ctx.moveTo(gx, gy + 2);
+        ctx.lineTo(gx + 1, gy - 1);
+        ctx.stroke();
       }
-
-      ctx.fillStyle = tileColors[displayTile] || '#666666';
-      ctx.fillRect(offsetX + x * tileSize, offsetY + y * tileSize, tileSize, tileSize);
-    });
-  });
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x <= map.width; x += 1) {
-    const px = offsetX + x * tileSize;
-    ctx.beginPath();
-    ctx.moveTo(px, offsetY);
-    ctx.lineTo(px, offsetY + map.height * tileSize);
-    ctx.stroke();
-  }
-  for (let y = 0; y <= map.height; y += 1) {
-    const py = offsetY + y * tileSize;
-    ctx.beginPath();
-    ctx.moveTo(offsetX, py);
-    ctx.lineTo(offsetX + map.width * tileSize, py);
-    ctx.stroke();
-  }
-
-  const drawIcon = (x, y, color, shape = 'rect') => {
-    const px = offsetX + x * tileSize;
-    const py = offsetY + y * tileSize;
-    const padding = Math.max(2, Math.round(tileSize * 0.14));
-    ctx.fillStyle = color;
-    if (shape === 'circle') {
+    } else if (tile === MAP.TILE_TYPE.PATH && tileSize >= 8) {
+      ctx.fillStyle = 'rgba(80,51,25,0.22)';
+      const sx = px + 2 + coordinateNoise(x, y, 7) * Math.max(1, tileSize - 5);
+      const sy = py + 2 + coordinateNoise(x, y, 8) * Math.max(1, tileSize - 5);
+      ctx.fillRect(sx, sy, 1.5, 1.5);
+    } else if (tile === MAP.TILE_TYPE.RIVER && tileSize >= 8) {
+      // 川には短い波線を入れる。
+      ctx.strokeStyle = 'rgba(220,247,255,0.48)';
       ctx.beginPath();
-      ctx.arc(px + tileSize / 2, py + tileSize / 2, (tileSize - padding * 2) / 2, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.fillRect(px + padding, py + padding, tileSize - padding * 2, tileSize - padding * 2);
+      ctx.moveTo(px + tileSize * 0.15, py + tileSize * 0.38);
+      ctx.quadraticCurveTo(px + tileSize * 0.5, py + tileSize * 0.22, px + tileSize * 0.85, py + tileSize * 0.38);
+      ctx.moveTo(px + tileSize * 0.25, py + tileSize * 0.7);
+      ctx.quadraticCurveTo(px + tileSize * 0.55, py + tileSize * 0.56, px + tileSize * 0.78, py + tileSize * 0.68);
+      ctx.stroke();
+    } else if (tile === MAP.TILE_TYPE.BRIDGE && tileSize >= 7) {
+      // 橋は板を並べたような線を描く。
+      ctx.strokeStyle = 'rgba(40,22,10,0.55)';
+      for (let line = 0.25; line < 1; line += 0.25) {
+        ctx.beginPath();
+        ctx.moveTo(px, py + tileSize * line);
+        ctx.lineTo(px + tileSize, py + tileSize * line);
+        ctx.stroke();
+      }
+    } else if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE) {
+      ctx.strokeStyle = 'rgba(255,140,100,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(px + tileSize * 0.15, py + tileSize * 0.2);
+      ctx.lineTo(px + tileSize * 0.52, py + tileSize * 0.48);
+      ctx.lineTo(px + tileSize * 0.34, py + tileSize * 0.82);
+      ctx.stroke();
     }
   };
 
-  // アイテムチェスト・ボスポジションの表示
+  map.tiles.forEach((row, y) => {
+    row.forEach((tile, x) => {
+      let displayTile = tile;
+      if (tile === MAP.TILE_TYPE.BROKEN_BRIDGE && repairedTiles.includes(`${x},${y}`)) {
+        displayTile = MAP.TILE_TYPE.BRIDGE;
+      }
+      drawDecoratedTile(displayTile, x, y);
+    });
+  });
+
+  // 盤面外周を二重線で囲み、ゲームマップらしいフレーム感を出す。
+  ctx.strokeStyle = 'rgba(157, 124, 255, 0.55)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(offsetX - 1, offsetY - 1, tileSize * map.width + 2, tileSize * map.height + 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(offsetX - 4, offsetY - 4, tileSize * map.width + 8, tileSize * map.height + 8);
+
+  /** 宝箱やボスなど、イベント位置の光彩付きマーカーを描画する。 */
+  const drawEventMarker = (x, y, color, kind) => {
+    const cx = offsetX + x * tileSize + tileSize / 2;
+    const cy = offsetY + y * tileSize + tileSize / 2;
+    const radius = Math.max(3, tileSize * 0.3);
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = Math.max(5, tileSize * 0.45);
+    ctx.fillStyle = color;
+
+    if (kind === 'chest') {
+      const size = radius * 1.45;
+      ctx.fillRect(cx - size / 2, cy - size * 0.32, size, size * 0.72);
+      ctx.strokeStyle = '#fff2ad';
+      ctx.lineWidth = Math.max(1, tileSize * 0.05);
+      ctx.strokeRect(cx - size / 2, cy - size * 0.32, size, size * 0.72);
+      ctx.fillStyle = '#6f4612';
+      ctx.fillRect(cx - 1, cy - 1, 2, Math.max(2, size * 0.25));
+    } else {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = Math.max(1, tileSize * 0.06);
+      ctx.stroke();
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 1.55, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  /**
+   * プレイヤーを丸い記号ではなく、見下ろし型RPGの冒険者として描画する。
+   * 頭・髪・マント・胴体・ブーツ・剣を小さな図形に分けることで、
+   * 外部画像を追加しなくてもキャラクターらしく見せる。
+   */
+  const drawPlayerSprite = (x, y, direction) => {
+    const cellX = offsetX + x * tileSize;
+    const cellY = offsetY + y * tileSize;
+    const scale = Math.max(0.55, tileSize / 24);
+    const cx = cellX + tileSize / 2;
+    const baseY = cellY + tileSize * 0.82;
+
+    ctx.save();
+
+    // 足元の影。キャラクターが地面に立っているように見せる。
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY, 7 * scale, 2.7 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 向きに合わせて左右反転する。上下は顔・髪の描き分けで表現する。
+    const facingLeft = direction === 'left';
+    const facingRight = direction === 'right';
+    ctx.translate(cx, baseY - 10 * scale);
+    if (facingLeft) ctx.scale(-1, 1);
+
+    // マント（背面）。
+    ctx.fillStyle = '#b6324a';
+    ctx.beginPath();
+    ctx.moveTo(-5 * scale, -4 * scale);
+    ctx.lineTo(5 * scale, -4 * scale);
+    ctx.lineTo(7 * scale, 8 * scale);
+    ctx.lineTo(0, 6 * scale);
+    ctx.lineTo(-7 * scale, 8 * scale);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#641c2a';
+    ctx.lineWidth = Math.max(1, scale);
+    ctx.stroke();
+
+    // ブーツ。
+    ctx.fillStyle = '#3b271d';
+    ctx.fillRect(-5 * scale, 6 * scale, 4 * scale, 4 * scale);
+    ctx.fillRect(1 * scale, 6 * scale, 4 * scale, 4 * scale);
+
+    // 服とベルト。
+    ctx.fillStyle = '#2f72c9';
+    ctx.fillRect(-5 * scale, -3 * scale, 10 * scale, 10 * scale);
+    ctx.fillStyle = '#e5c15f';
+    ctx.fillRect(-5 * scale, 2 * scale, 10 * scale, 2 * scale);
+    ctx.fillStyle = '#fff1a6';
+    ctx.fillRect(-1 * scale, 2 * scale, 2 * scale, 2 * scale);
+
+    // 剣。横向きでは進行方向側へ、上下では右側へ装備する。
+    const swordX = facingLeft ? -8 : 7;
+    ctx.strokeStyle = '#dce8f6';
+    ctx.lineWidth = Math.max(1.2, 1.5 * scale);
+    ctx.beginPath();
+    ctx.moveTo(swordX * scale, -1 * scale);
+    ctx.lineTo((swordX + 2) * scale, 7 * scale);
+    ctx.stroke();
+    ctx.strokeStyle = '#70502d';
+    ctx.beginPath();
+    ctx.moveTo((swordX - 2) * scale, 0);
+    ctx.lineTo((swordX + 2) * scale, -1 * scale);
+    ctx.stroke();
+
+    // 頭と髪。
+    ctx.fillStyle = '#f2c39f';
+    ctx.fillRect(-4 * scale, -10 * scale, 8 * scale, 7 * scale);
+    ctx.fillStyle = '#5b3426';
+    ctx.fillRect(-5 * scale, -12 * scale, 10 * scale, 4 * scale);
+    ctx.fillRect(-5 * scale, -9 * scale, 2 * scale, 4 * scale);
+
+    // 下向き・横向きのときだけ目を描く。上向きは後頭部を見せる。
+    if (direction !== 'up') {
+      ctx.fillStyle = '#172033';
+      if (facingRight || facingLeft) {
+        ctx.fillRect(2 * scale, -7 * scale, Math.max(1, scale), Math.max(1, scale));
+      } else {
+        ctx.fillRect(-2.5 * scale, -7 * scale, Math.max(1, scale), Math.max(1, scale));
+        ctx.fillRect(1.5 * scale, -7 * scale, Math.max(1, scale), Math.max(1, scale));
+      }
+    }
+
+    // 輪郭を軽く発光させ、地形の上でも見失いにくくする。
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.shadowColor = 'rgba(89, 174, 255, 0.85)';
+    ctx.shadowBlur = 7 * scale;
+    ctx.fillStyle = 'rgba(67, 140, 255, 0.18)';
+    ctx.fillRect(-7 * scale, -12 * scale, 14 * scale, 22 * scale);
+    ctx.restore();
+  };
   if (Array.isArray(map.itemsOnMap)) {
     map.itemsOnMap.forEach(chest => {
-      drawIcon(chest.pos[0], chest.pos[1], '#F2C94C', 'rect');
+      // 開封済みの宝箱は消し、取得済みであることを盤面にも反映する。
+      if (!openedChestIds.includes(chest.chestId)) {
+        drawEventMarker(chest.pos[0], chest.pos[1], '#f6c945', 'chest');
+      }
     });
   }
 
-  if (Array.isArray(map.bossPos) && map.bossPos.length === 2) {
-    drawIcon(map.bossPos[0], map.bossPos[1], '#E76F51', 'circle');
+  if (Array.isArray(map.bossPos) && map.bossPos.length === 2 && !progress?.bossDefeated) {
+    drawEventMarker(map.bossPos[0], map.bossPos[1], '#ff5a69', 'boss');
   }
 
-  // プレイヤー位置を表示
   if (gameState.player && gameState.player.pos) {
-    drawIcon(gameState.player.pos.x, gameState.player.pos.y, '#2F80ED', 'circle');
+    drawPlayerSprite(gameState.player.pos.x, gameState.player.pos.y, explorePlayerDirection);
   }
 }
 
@@ -695,6 +913,34 @@ function registerExploreControls() {
   document.addEventListener('keydown', handleKeyPress);
 }
 
+// 探索演出の終了タイマーをクラス名ごとに保持する。
+// 同じ操作を連続した場合、古いタイマーが新しい演出を消さないようにする。
+const exploreEffectTimers = {};
+
+/**
+ * 探索画面へ一時的にCSSクラスを付け、演出を再生する共通関数。
+ * 見た目だけを変更するため、座標・アイテム・戦闘状態には影響しない。
+ * @param {string} effectClass 演出用CSSクラス
+ * @param {number} durationMs 演出時間
+ */
+function playExploreEffect(effectClass, durationMs) {
+  const container = document.querySelector('#screen-explore .explore-container');
+  if (!container) return;
+
+  if (exploreEffectTimers[effectClass]) {
+    window.clearTimeout(exploreEffectTimers[effectClass]);
+  }
+
+  container.classList.remove(effectClass);
+  void container.offsetWidth; // 連続実行時もアニメーションを最初から再生する
+  container.classList.add(effectClass);
+
+  exploreEffectTimers[effectClass] = window.setTimeout(() => {
+    container.classList.remove(effectClass);
+    delete exploreEffectTimers[effectClass];
+  }, durationMs);
+}
+
 /**
  * 探索画面での移動を処理
  * @param {string} direction
@@ -711,11 +957,17 @@ function handleExploreMove(direction) {
     return;
   }
 
+  // 入力された方向へキャラクターの向きを変える。移動できない場合も向きは変わる。
+  explorePlayerDirection = direction;
+
   // 移動処理を実行
   const result = EXPLORE.movePlayer(gameState, direction);
 
   if (!result.success) {
     setMessage('explore-message', result.message);
+    drawExploreMap(gameState);
+    // 移動できない場所へ進もうとしたことを、マップの小さな揺れで知らせる。
+    playExploreEffect('is-move-blocked', EXPLORE_EFFECT_CONFIG.blockedMoveDurationMs);
     return;
   }
 
@@ -736,7 +988,18 @@ function handleExploreMove(direction) {
     const rpgEnemyId = gameState.battle.currentEnemyId || 'slime_1';
     const battleEnemyId = ENEMY_ID_TO_BATTLE[rpgEnemyId] || 'mob1';
     window.SAVE.saveGameState(gameState);
-    window.location.assign(`battle.html?enemy=${encodeURIComponent(battleEnemyId)}`);
+
+    // ボスは強い赤、通常敵は暗い赤の遭遇演出に分ける。
+    // 演出が見えるよう、短い時間だけ待ってから戦闘画面へ移動する。
+    const encounterClass = result.isBoss ? 'is-boss-encounter' : 'is-enemy-encounter';
+    const transitionMs = result.isBoss
+      ? EXPLORE_EFFECT_CONFIG.bossEncounterDurationMs
+      : EXPLORE_EFFECT_CONFIG.enemyEncounterDurationMs;
+    playExploreEffect(encounterClass, transitionMs);
+
+    window.setTimeout(() => {
+      window.location.assign(`battle.html?enemy=${encodeURIComponent(battleEnemyId)}`);
+    }, transitionMs);
     return;
   }
 
