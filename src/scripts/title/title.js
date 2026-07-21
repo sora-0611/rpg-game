@@ -18,6 +18,9 @@ RPG.initTitleScreen = function () {
 
   if (startBtn) {
     startBtn.addEventListener('click', function () {
+      if (RPG.Save && typeof RPG.Save.clearSaveData === 'function') {
+        RPG.Save.clearSaveData();
+      }
       window.dispatchEvent(new CustomEvent('title:start'));
     });
   }

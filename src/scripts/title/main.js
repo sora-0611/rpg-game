@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.addEventListener('title:start', function () {
+      if (window.RPG && window.RPG.Save && typeof window.RPG.Save.clearSaveData === 'function') {
+        window.RPG.Save.clearSaveData();
+      } else if (window.SAVE && typeof window.SAVE.deleteSavedGame === 'function') {
+        window.SAVE.deleteSavedGame();
+      }
       window.location.href = 'pages/explore.html';
     });
 
