@@ -117,7 +117,7 @@
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
-      // 戦闘データがない状態: HPバーは表示する情報が無いの非表示にする
+      // 戦闘データがない状態: HPバーは表示する情報が無いため非表示にする
       dom.enemyHpBlock.hidden = true;
       dom.playerHpBlock.hidden = true;
       showConfirm(
@@ -148,7 +148,7 @@
 
   // ---------- ターン制御 ----------
 
-  // プレイヤターン開始時: 生存キャラクターに行動順キューを作る（状態定義書: コマンド選択可能）
+  // プレイヤーターン開始時: 生存キャラクターで行動順キューを作る（状態定義書: コマンド選択可能）
   function startPlayerRound() {
     state.turnQueue = state.characters
       .map((c, index) => index)
@@ -189,7 +189,10 @@
         onDefeat();
         return;
       }
-      const useGroupAttack = enemy.groupAttack && (!enemy.singleAttack || Math.random() < 0.5);
+      // 単体攻撃と全体攻撃の両方を持つ敵は、1/3の確率で全体攻撃を選ぶ。
+      // 全体攻撃しか持たない敵は、これまでどおり必ず全体攻撃を行う。
+      const useGroupAttack =
+        enemy.groupAttack && (!enemy.singleAttack || Math.random() < 1 / 3);
       const newlyDowned = [];
       let message;
       if (useGroupAttack) {
@@ -694,7 +697,7 @@
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
     dom.playerAvatar.textContent = displayCharacter.name.charAt(displayCharacter.name.length - 1);
-    dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack} 防御 ${displayCharacter.defense}`;
+    dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack}　防御 ${displayCharacter.defense}`;
     setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
