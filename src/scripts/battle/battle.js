@@ -13,6 +13,7 @@
 
   // ---------- DOM参照 ----------
   const dom = {
+    battleScreen: document.getElementById("battle-screen"),
     enemyBox: document.getElementById("enemy-box"),
     enemyAvatar: document.getElementById("enemy-avatar"),
     enemyName: document.getElementById("enemy-name"),
@@ -62,6 +63,10 @@
     pendingItemId: null,
     pendingTargetIndex: null, // 単体対象アイテムで選択された対象キャラのstate.characters内index
     itemUsedThisOpen: false,
+    // 全体攻撃演出の終了タイマー。連続再生時に古いタイマーを取り消すため保持する。
+    groupAttackEffectTimer: null,
+    // 単体攻撃など、短い演出の終了タイマーをCSSクラス名ごとに保持する。
+    attackEffectTimers: {},
   };
 
   // ---------- 初期化 ----------
@@ -202,11 +207,16 @@
           applyEnemyDamage(enemy, target, { isGroupAttack: true });
           if (target.hpCurrent <= 0) newlyDowned.push(target.name);
         });
+        // パーティー全員が攻撃を受けたことが視覚的に分かるよう、
+        // 画面フラッシュと揺れの演出を再生する。
+        playGroupAttackEffect();
         message = `${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`;
       } else {
         const target = aliveCharacters[Math.floor(Math.random() * aliveCharacters.length)];
         // 単体攻撃は従来どおり、敵の攻撃力をそのまま使用する。
         const damage = applyEnemyDamage(enemy, target, { isGroupAttack: false });
+        // 単体攻撃ではプレイヤー側だけが揺れる演出を再生する。
+        playEnemySingleAttackEffect();
         message = `${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`;
         if (target.hpCurrent <= 0) newlyDowned.push(target.name);
       }
@@ -227,6 +237,77 @@
       console.error(error);
       logMessage("処理に失敗しました。もう一度お試しください。");
     }
+  }
+
+  // ---------- 戦闘演出 ----------
+  /**
+   * battle-screenへ演出用CSSクラスを一時的に付ける共通処理。
+   *
+   * 攻撃ごとの関数では「どのクラスを、何ミリ秒付けるか」だけを指定する。
+   * そのため、演出を増やしてもダメージ計算やターン処理を変更する必要がない。
+   *
+   * @param {string} effectClass 付け外しするCSSクラス名
+   * @param {number} durationMs 演出時間（ミリ秒）
+   */
+  function playTemporaryBattleEffect(effectClass, durationMs) {
+    const currentTimer = state.attackEffectTimers[effectClass];
+    if (currentTimer) {
+      window.clearTimeout(currentTimer);
+    }
+
+    // 同じ攻撃が連続しても、クラスを外して再描画することで最初から再生する。
+    dom.battleScreen.classList.remove(effectClass);
+    void dom.battleScreen.offsetWidth;
+    dom.battleScreen.classList.add(effectClass);
+
+    state.attackEffectTimers[effectClass] = window.setTimeout(() => {
+      dom.battleScreen.classList.remove(effectClass);
+      delete state.attackEffectTimers[effectClass];
+    }, durationMs);
+  }
+
+  /** 敵の単体攻撃。プレイヤー側だけを短く揺らす。 */
+  function playEnemySingleAttackEffect() {
+    playTemporaryBattleEffect("is-single-hit", 420);
+  }
+
+  /** プレイヤーの通常攻撃。敵を点滅させ、軽く後ろへ押す。 */
+  function playPlayerAttackEffect() {
+    playTemporaryBattleEffect("is-enemy-hit", 380);
+  }
+
+  /** 攻撃アイテム。通常攻撃と区別できる青紫色の衝撃を表示する。 */
+  function playAttackItemEffect() {
+    playTemporaryBattleEffect("is-item-hit", 520);
+  }
+
+  /**
+   * 敵の全体攻撃演出を再生する。
+   *
+   * CSSクラスを一時的に付けるだけなので、ダメージ計算やターン処理には影響しない。
+   * 同じ演出が連続した場合でも、いったんクラスを外してから付け直すことで
+   * 毎回アニメーションが最初から再生される。
+   */
+  function playGroupAttackEffect() {
+    const effectClass = "is-group-hit";
+    const effectDurationMs = 550;
+
+    // 念のため、前回の演出終了用タイマーが残っていれば取り消す。
+    if (state.groupAttackEffectTimer) {
+      window.clearTimeout(state.groupAttackEffectTimer);
+    }
+
+    dom.battleScreen.classList.remove(effectClass);
+
+    // classを外した状態をブラウザに一度反映させる。
+    // この読み取りにより、連続攻撃でもCSSアニメーションを再スタートできる。
+    void dom.battleScreen.offsetWidth;
+    dom.battleScreen.classList.add(effectClass);
+
+    state.groupAttackEffectTimer = window.setTimeout(() => {
+      dom.battleScreen.classList.remove(effectClass);
+      state.groupAttackEffectTimer = null;
+    }, effectDurationMs);
   }
 
   // ---------- ダメージ計算 ----------
@@ -307,6 +388,8 @@
       // 全体攻撃ではないため、攻撃力の半減は行わない。
       const damage = calculateDamage(attacker.attack, state.enemy.defense);
       state.enemy.hpCurrent = Math.max(0, state.enemy.hpCurrent - damage);
+      // 敵側が光って後ろへ押される通常攻撃の演出を再生する。
+      playPlayerAttackEffect();
       logMessage(`${attacker.name}の攻撃！${state.enemy.name}に${damage}のダメージを与えた。`);
       renderAll();
       if (state.enemy.hpCurrent <= 0) {
@@ -489,6 +572,8 @@
       resultText = `${item.name}を使用した。パーティ全体のHPが${item.effectValue}回復した。`;
     } else if (item.effectType === "ダメージ") {
       state.enemy.hpCurrent = Math.max(0, state.enemy.hpCurrent - item.effectValue);
+      // 攻撃アイテム専用の青紫色の衝撃演出を再生する。
+      playAttackItemEffect();
       resultText = `${item.name}を使用した。${state.enemy.name}に${item.effectValue}のダメージを与えた。`;
     }
 
