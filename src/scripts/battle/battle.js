@@ -342,6 +342,11 @@
   }
 
   function selectItem(itemId) {
+    if (state.itemUsedThisOpen) {
+      // 1ターンに使えるアイテムは1つまで
+      logMessage("このターンはすでにアイテムを使用しました。");
+      return;
+    }
     const item = ITEM_MASTER[itemId];
     if (!item.usableInBattle) {
       // エラー・例外仕様書: 戦闘で使用できないアイテムを使う
@@ -689,7 +694,7 @@
     state.inventory.forEach((entry) => {
       const item = ITEM_MASTER[entry.itemId];
       const row = document.createElement("li");
-      const isUnavailable = !item.usableInBattle || isHpFullForItem(item);
+      const isUnavailable = !item.usableInBattle || isHpFullForItem(item) || state.itemUsedThisOpen;
       row.className = "item-row" + (isUnavailable ? " is-unavailable" : "");
       row.innerHTML = `<span>・${item.name}</span><span class="item-row-qty">×${entry.quantity}</span>`;
       row.addEventListener("click", () => selectItem(item.itemId));
