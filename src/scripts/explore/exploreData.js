@@ -15,7 +15,7 @@ const CHARACTER_IDS = ['A', 'B', 'C'];
 const CHARACTERS = Object.freeze({
   'A': Object.freeze({
     characterId: 'A',
-    name: 'キャラA',
+    name: 'レオン',
     baseHp: 20,
     baseAttack: 20,
     baseDefense: 20,
@@ -23,7 +23,7 @@ const CHARACTERS = Object.freeze({
   }),
   'B': Object.freeze({
     characterId: 'B',
-    name: 'キャラB',
+    name: 'セリス',
     baseHp: 20,
     baseAttack: 30,
     baseDefense: 10,
@@ -31,7 +31,7 @@ const CHARACTERS = Object.freeze({
   }),
   'C': Object.freeze({
     characterId: 'C',
-    name: 'キャラC',
+    name: 'ガルド',
     baseHp: 30,
     baseAttack: 5,
     baseDefense: 25,
@@ -188,7 +188,7 @@ const ENEMIES = Object.freeze({
   // 雑魚モンスター
   'slime_1': Object.freeze({
     enemyId: 'slime_1',
-    name: '雑魚モンスター1',
+    name: 'こうもり',
     baseHp: 50,
     baseAttack: 10,
     baseDefense: 10,
@@ -203,7 +203,7 @@ const ENEMIES = Object.freeze({
   }),
   'slime_2': Object.freeze({
     enemyId: 'slime_2',
-    name: '雑魚モンスター2',
+    name: 'ねずみ',
     baseHp: 50,
     baseAttack: 10,
     baseDefense: 10,
@@ -217,7 +217,7 @@ const ENEMIES = Object.freeze({
   }),
   'slime_3': Object.freeze({
     enemyId: 'slime_3',
-    name: '雑魚モンスター3',
+    name: 'とかげ',
     baseHp: 50,
     baseAttack: 20,
     baseDefense: 0,
@@ -234,7 +234,7 @@ const ENEMIES = Object.freeze({
   // ボスモンスター
   'boss_1': Object.freeze({
     enemyId: 'boss_1',
-    name: 'ボスモンスター1',
+    name: 'ライオン',
     baseHp: 150,
     baseAttack: 20,
     baseDefense: 70,
@@ -249,7 +249,7 @@ const ENEMIES = Object.freeze({
   }),
   'boss_2': Object.freeze({
     enemyId: 'boss_2',
-    name: 'ボスモンスター2',
+    name: 'かば',
     baseHp: 150,
     baseAttack: 70,
     baseDefense: 20,
@@ -265,7 +265,7 @@ const ENEMIES = Object.freeze({
   // ラスボス
   'final_boss': Object.freeze({
     enemyId: 'final_boss',
-    name: 'ラスボス',
+    name: 'ドラゴン',
     baseHp: 300,
     baseAttack: 100,
     baseDefense: 50,
@@ -284,7 +284,7 @@ const ENEMIES = Object.freeze({
 const MAPS = Object.freeze({
   1: Object.freeze({
     mapId: 1,
-    name: 'やさしい',
+    name: '広い草原',
     difficulty: 1,
     width: 12,
     height: 12,
@@ -317,7 +317,7 @@ const MAPS = Object.freeze({
   }),
   2: Object.freeze({
     mapId: 2,
-    name: 'ふつう',
+    name: '湿った沼地',
     difficulty: 2,
     width: 16,
     height: 14,
@@ -357,7 +357,7 @@ const MAPS = Object.freeze({
   }),
   3: Object.freeze({
     mapId: 3,
-    name: '難しい',
+    name: 'ドラゴンの住処',
     difficulty: 3,
     width: 30,
     height: 16,

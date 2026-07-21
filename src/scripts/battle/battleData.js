@@ -7,45 +7,45 @@
 
 // 操作キャラクター（3人固定）
 const CHARACTERS_BASE = [
-  { characterId: "A", name: "プレイヤー1", hpMax: 20, attack: 20, defense: 20, enhanceLevel: 1 },
-  { characterId: "B", name: "プレイヤー2", hpMax: 20, attack: 30, defense: 10, enhanceLevel: 1 },
-  { characterId: "C", name: "プレイヤー3", hpMax: 30, attack: 5, defense: 25, enhanceLevel: 1 },
+  { characterId: "A", name: "レオン", hpMax: 20, attack: 20, defense: 20, enhanceLevel: 1 },
+  { characterId: "B", name: "セリス", hpMax: 20, attack: 30, defense: 10, enhanceLevel: 1 },
+  { characterId: "C", name: "ガルド", hpMax: 30, attack: 5, defense: 25, enhanceLevel: 1 },
 ];
 
 // 敵マスタ（雑魚3種、ボス2種、ラスボス1種）
 const ENEMY_MASTER = {
   mob1: {
-    enemyId: "mob1", name: "雑魚モンスター1", rank: "雑魚",
+    enemyId: "mob1", name: "こうもり", rank: "雑魚",
     hpMax: 50, attack: 10, defense: 10,
     coinDrop: 5, coinDropRate: 1, itemDropCount: [1, 2], itemDropRate: 0.5,
     singleAttack: true, groupAttack: false, isBoss: false,
   },
   mob2: {
-    enemyId: "mob2", name: "雑魚モンスター2", rank: "雑魚",
+    enemyId: "mob2", name: "ねずみ", rank: "雑魚",
     hpMax: 50, attack: 10, defense: 10,
     coinDrop: 5, coinDropRate: 1, itemDropCount: [1, 2], itemDropRate: 0.5,
     singleAttack: false, groupAttack: true, isBoss: false,
   },
   mob3: {
-    enemyId: "mob3", name: "雑魚モンスター3", rank: "雑魚",
+    enemyId: "mob3", name: "とかげ", rank: "雑魚",
     hpMax: 50, attack: 20, defense: 0,
     coinDrop: 5, coinDropRate: 1, itemDropCount: [1, 2], itemDropRate: 0.5,
     singleAttack: true, groupAttack: true, isBoss: false,
   },
   boss1: {
-    enemyId: "boss1", name: "ボスモンスター1", rank: "ボス",
+    enemyId: "boss1", name: "ライオン", rank: "ボス",
     hpMax: 150, attack: 20, defense: 70,
     coinDrop: 30, coinDropRate: 1, itemDropCount: [3, 3], itemDropRate: 0.8,
     singleAttack: true, groupAttack: false, isBoss: true,
   },
   boss2: {
-    enemyId: "boss2", name: "ボスモンスター2", rank: "ボス",
+    enemyId: "boss2", name: "かば", rank: "ボス",
     hpMax: 150, attack: 70, defense: 20,
     coinDrop: 30, coinDropRate: 1, itemDropCount: [3, 3], itemDropRate: 0.8,
     singleAttack: false, groupAttack: true, isBoss: true,
   },
   lastboss: {
-    enemyId: "lastboss", name: "ラスボス", rank: "ラスボス",
+    enemyId: "lastboss", name: "ドラゴン", rank: "ラスボス",
     hpMax: 300, attack: 100, defense: 50,
     coinDrop: 300, coinDropRate: 1, itemDropCount: [6, 6], itemDropRate: 1,
     singleAttack: true, groupAttack: true, isBoss: true,
