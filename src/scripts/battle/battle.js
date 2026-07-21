@@ -117,7 +117,7 @@
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
-      // 戦闘データがない状態: HPバーは表示する情報が無いため非表示にする
+      // 戦闘データがない状態: HPバーは表示する情報が無いの非表示にする
       dom.enemyHpBlock.hidden = true;
       dom.playerHpBlock.hidden = true;
       showConfirm(
@@ -148,7 +148,7 @@
 
   // ---------- ターン制御 ----------
 
-  // プレイヤーターン開始時: 生存キャラクターで行動順キューを作る（状態定義書: コマンド選択可能）
+  // プレイヤターン開始時: 生存キャラクターに行動順キューを作る（状態定義書: コマンド選択可能）
   function startPlayerRound() {
     state.turnQueue = state.characters
       .map((c, index) => index)
@@ -613,14 +613,11 @@
     BRIDGE.writeRawGameState(gameState);
   }
 
-  // 「戦闘終了」ボタン: 探索画面から来ていれば結果を反映して戻る。単体テスト起動時は戻り先が無い。
+  // 「戦闘終了」ボタン: 戦闘結果を反映して探索画面に戻る。
   function handleBattleEnd() {
     const battleOver = state.phase === "VICTORY" || state.phase === "DEFEAT" || state.phase === "ESCAPED";
     if (!battleOver) return;
-    if (!state.hasIncomingSave) {
-      showToast("この画面は単体テスト用です（戻り先がありません）。");
-      return;
-    }
+
     applyBattleResultToGameState();
     window.location.assign("explore.html");
   }
@@ -697,7 +694,7 @@
       : state.characters.find((c) => c.hpCurrent > 0) || state.characters[0];
     dom.playerName.textContent = displayCharacter.name;
     dom.playerAvatar.textContent = displayCharacter.name.charAt(displayCharacter.name.length - 1);
-    dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack}　防御 ${displayCharacter.defense}`;
+    dom.playerStatsLine.textContent = `攻撃 ${displayCharacter.attack} 防御 ${displayCharacter.defense}`;
     setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
