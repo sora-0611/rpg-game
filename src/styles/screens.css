@@ -903,18 +903,6 @@
   overflow: hidden;
 }
 
-/* マップ上を横切る薄い光で、静止画のような印象を減らす。 */
-.explore-map::before {
-  content: "";
-  position: absolute;
-  inset: -60% -25%;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(115deg, transparent 42%, rgba(110, 176, 255, 0.08) 49%, rgba(255,255,255,0.09) 50%, transparent 57%);
-  transform: translateX(-38%);
-  animation: explore-map-sheen var(--explore-sheen-duration) ease-in-out infinite;
-}
-
 /* 四隅を暗くして視線を中央のマップへ誘導する。 */
 .explore-map::after {
   content: "";
@@ -956,15 +944,8 @@
   100% { transform: translate3d(4%, 3%, 0) rotate(7deg); }
 }
 
-@keyframes explore-map-sheen {
-  0%, 28%  { transform: translateX(-42%); opacity: 0; }
-  42%      { opacity: 1; }
-  62%, 100% { transform: translateX(42%); opacity: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .explore-container::before,
-  .explore-map::before {
+  .explore-container::before {
     animation: none;
   }
 }
@@ -982,7 +963,6 @@
   --explore-panel-shadow: rgba(0, 0, 0, 0.42);
   --explore-danger: #ff5a69;
   --explore-ambient-duration: 14s;
-  --explore-sheen-duration: 9s;
 }
 
 
@@ -1017,4 +997,28 @@
     justify-content: flex-start;
     overflow-x: auto;
   }
+}
+
+
+/* ===== EXPLORE HP BAR COLORS ===== */
+/* 戦闘画面と同じ割合で、探索画面のHPバー色を切り替える。 */
+#screen-explore .hpbar .hpbar-fill {
+  background: var(--color-success); /* HPが50%より多い場合は緑 */
+  box-shadow: 0 0 8px rgba(99, 216, 137, 0.30);
+  transition: width var(--transition-normal), background-color var(--transition-normal);
+}
+
+#screen-explore .hpbar.hpbar--warning .hpbar-fill {
+  background: var(--color-warning); /* HPが20%より多く、50%以下なら黄色 */
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.30);
+}
+
+#screen-explore .hpbar.hpbar--danger .hpbar-fill {
+  background: var(--color-danger); /* HPが20%以下なら赤 */
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.34);
+}
+
+#screen-explore .hpbar.hpbar--zero .hpbar-fill {
+  width: 0 !important; /* HPが0なら色付き部分を表示しない */
+  box-shadow: none;
 }

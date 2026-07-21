@@ -81,16 +81,18 @@ function updateHpBar(hpbarId, current, max) {
   const fill = hpbar.querySelector('.hpbar-fill');
   if (!fill) return;
 
-  const percentage = max > 0 ? (current / max) * 100 : 0;
-  fill.style.width = percentage + '%';
+  // HPバーが100%を超えたり、0%未満になったりしないよう範囲を制限する。
+  const ratio = max > 0 ? Math.max(0, Math.min(current / max, 1)) : 0;
+  fill.style.width = `${Math.round(ratio * 100)}%`;
 
-  // 状態クラスを更新
-  hpbar.classList.remove('hpbar--warning', 'hpbar--danger');
+  // 戦闘画面と同じ基準で色を切り替える。
+  // 50%より多い: 緑 / 50%以下: 黄色 / 20%以下: 赤 / 0: 空のバー
+  hpbar.classList.remove('hpbar--warning', 'hpbar--danger', 'hpbar--zero');
   if (current <= 0) {
+    hpbar.classList.add('hpbar--zero');
+  } else if (ratio <= 0.2) {
     hpbar.classList.add('hpbar--danger');
-  } else if (current <= max * 0.33) {
-    hpbar.classList.add('hpbar--danger');
-  } else if (current <= max * 0.66) {
+  } else if (ratio <= 0.5) {
     hpbar.classList.add('hpbar--warning');
   }
 }
@@ -251,8 +253,7 @@ function drawExploreMap(gameState) {
 
   /**
    * マップごとにCanvasの内部解像度を調整する。
-   * 従来は全マップが400×400固定だったため、横30マスあるマップ3では
-   * 1マスが約13pxまで縮小され、キャラクターや地形が見えづらくなっていた。
+   * 横30マスあるマップ3では1マスが約13pxまで縮小され、キャラクターや地形が見えづらくなっていた。
    * マップ3だけ1マス24pxを確保し、横長の720×384として描画する。
    */
   const isLargeMap = map.width >= 24;
@@ -388,7 +389,7 @@ function drawExploreMap(gameState) {
     });
   });
 
-  // 盤面外周を二重線で囲み、ゲームマップらしいフレーム感を出す。
+  // 盤面外周を二重線で囲み、フレーム感を出す。
   ctx.strokeStyle = 'rgba(157, 124, 255, 0.55)';
   ctx.lineWidth = 2;
   ctx.strokeRect(offsetX - 1, offsetY - 1, tileSize * map.width + 2, tileSize * map.height + 2);
@@ -752,7 +753,7 @@ function initializeUI() {
     const button = document.getElementById(`btn-map-select-${mapId}`);
     if (button) {
       button.addEventListener('click', () => {
-        // マップ選択（後続フェーズで実装）
+        // マップ選択
         console.log(`Map ${mapId} selected`);
         // 別のマップに切り替える場合は初期位置からスタートする
         // （同じマップを選び直した場合は探索中の位置を維持する）
