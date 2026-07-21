@@ -46,7 +46,7 @@ const ENEMY_MASTER = {
   },
   lastboss: {
     enemyId: "lastboss", name: "ラスボス", rank: "ラスボス",
-    hpMax: 300, attack: 100, defense: 50,
+    hpMax: 300, attack: 100, defense: 90,
     coinDrop: 300, coinDropRate: 1, itemDropCount: [6, 6], itemDropRate: 1,
     singleAttack: true, groupAttack: true, isBoss: true,
   },
