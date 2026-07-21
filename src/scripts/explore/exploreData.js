@@ -303,9 +303,10 @@ const MAPS = Object.freeze({
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ]),
+    // マップ1: 雑魚モンスター1のみ出現
     enemySpawns: Object.freeze([
       { pos: [2, 2], enemyId: 'slime_1', spawnRate: 0.6 },
-      { pos: [8, 2], enemyId: 'slime_2', spawnRate: 0.5 },
+      { pos: [8, 2], enemyId: 'slime_1', spawnRate: 0.5 },
     ]),
     itemsOnMap: Object.freeze([
       { pos: [1, 3], itemId: 'heal_1', chestId: 'chest_1' },
@@ -338,11 +339,12 @@ const MAPS = Object.freeze({
       [0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ]),
+    // マップ2: 雑魚モンスター1・2のみ出現（3は出さない）
     enemySpawns: Object.freeze([
       { pos: [2, 2], enemyId: 'slime_2', spawnRate: 0.6 },
-      { pos: [7, 7], enemyId: 'slime_3', spawnRate: 0.7 },
+      { pos: [7, 7], enemyId: 'slime_1', spawnRate: 0.7 },
       { pos: [2, 7], enemyId: 'slime_1', spawnRate: 0.5 },
-      { pos: [7, 9], enemyId: 'slime_3', spawnRate: 0.6 },
+      { pos: [7, 9], enemyId: 'slime_2', spawnRate: 0.6 },
       { pos: [12, 7], enemyId: 'slime_2', spawnRate: 0.6 },
     ]),
     itemsOnMap: Object.freeze([
@@ -380,6 +382,7 @@ const MAPS = Object.freeze({
       [1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ]),
+    // マップ3: 雑魚モンスター1・2・3すべて出現（既存のまま。全種類が含まれている）
     enemySpawns: Object.freeze([
       { pos: [2, 2], enemyId: 'slime_3', spawnRate: 0.6 },
       { pos: [8, 2], enemyId: 'slime_2', spawnRate: 0.5 },
