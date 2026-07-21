@@ -39,6 +39,7 @@
     confirmNo: document.getElementById("confirm-no"),
     itemWindow: document.getElementById("item-window"),
     itemList: document.getElementById("item-list"),
+    targetList: document.getElementById("target-list"),
     itemCloseButton: document.getElementById("item-close-button"),
     fleeWindow: document.getElementById("flee-window"),
     fleeYesButton: document.getElementById("flee-yes-button"),
@@ -59,6 +60,7 @@
     turnQueue: [],
     actingIndex: 0,
     pendingItemId: null,
+    pendingTargetIndex: null, // 単体対象アイテムで選択された対象キャラのstate.characters内index
     itemUsedThisOpen: false,
   };
 
@@ -105,6 +107,7 @@
       applyIncomingGameState();
       state.phase = "PLAYER_TURN";
       state.pendingItemId = null;
+      state.pendingTargetIndex = null;
       hideConfirm();
       closeAllWindows();
       // 戦闘データが正しく揃ったのでHPバーを表示する（前回失敗時に非表示にした分を戻す）
@@ -297,12 +300,15 @@
     if (getTotalItemQuantity() === 0) return;
     state.itemUsedThisOpen = false;
     renderItemList();
+    hideTargetList();
     dom.itemWindow.hidden = false;
   }
 
   function closeItemWindow() {
     dom.itemWindow.hidden = true;
+    hideTargetList();
     state.pendingItemId = null;
+    state.pendingTargetIndex = null;
     hideConfirm();
     if (state.itemUsedThisOpen) {
       state.itemUsedThisOpen = false;
@@ -316,11 +322,18 @@
     return state.inventory.reduce((sum, entry) => sum + entry.quantity, 0);
   }
 
+  // 単体回復アイテムの対象になり得るキャラクター（生存かつHP満タンでない）一覧
+  function getAvailableSingleTargets() {
+    return state.characters
+      .map((character, index) => ({ character, index }))
+      .filter(({ character }) => character.hpCurrent > 0 && character.hpCurrent < character.hpMax);
+  }
+
   function isHpFullForItem(item) {
     if (item.effectType !== "HP回復") return false;
     if (item.target === "single") {
-      const target = getActingCharacter();
-      return target.hpCurrent >= target.hpMax;
+      // 誰か1人でも対象になり得れば使用可能（対象は選択後に決まる）
+      return getAvailableSingleTargets().length === 0;
     }
     if (item.target === "party") {
       return state.characters.every((c) => c.hpCurrent <= 0 || c.hpCurrent >= c.hpMax);
@@ -339,8 +352,46 @@
       logMessage("HPが満タンのため使用できません。");
       return;
     }
+
     state.pendingItemId = itemId;
+
+    // 単体対象アイテムは、まず「誰に使うか」を選んでもらう
+    if (item.effectType === "HP回復" && item.target === "single") {
+      showTargetList(getAvailableSingleTargets());
+      return;
+    }
+
     showConfirm(`${item.name}を使用しますか？`, onItemConfirmYes, onItemConfirmNo);
+  }
+
+  // 単体対象アイテムの対象選択リストを表示する
+  function showTargetList(targets) {
+    dom.itemList.hidden = true;
+    dom.targetList.innerHTML = "";
+    targets.forEach(({ character, index }) => {
+      const row = document.createElement("li");
+      row.className = "item-row";
+      row.innerHTML = `<span>・${character.name}</span><span class="item-row-qty">${character.hpCurrent} / ${character.hpMax}</span>`;
+      row.addEventListener("click", () => selectTarget(index));
+      dom.targetList.appendChild(row);
+    });
+    dom.targetList.hidden = false;
+    logMessage("誰に使いますか？");
+  }
+
+  function hideTargetList() {
+    dom.targetList.hidden = true;
+    dom.targetList.innerHTML = "";
+    dom.itemList.hidden = false;
+  }
+
+  // 対象キャラクター選択後、通常の使用確認へ進む
+  function selectTarget(characterIndex) {
+    state.pendingTargetIndex = characterIndex;
+    const item = ITEM_MASTER[state.pendingItemId];
+    const target = state.characters[characterIndex];
+    hideTargetList();
+    showConfirm(`${target.name}に${item.name}を使用しますか？`, onItemConfirmYes, onItemConfirmNo);
   }
 
   function onItemConfirmYes() {
@@ -350,7 +401,7 @@
 
     let resultText = "";
     if (item.effectType === "HP回復" && item.target === "single") {
-      const target = getActingCharacter();
+      const target = state.characters[state.pendingTargetIndex];
       const before = target.hpCurrent;
       target.hpCurrent = Math.min(target.hpMax, target.hpCurrent + item.effectValue);
       const healed = target.hpCurrent - before;
@@ -371,6 +422,7 @@
 
     state.itemUsedThisOpen = true;
     state.pendingItemId = null;
+    state.pendingTargetIndex = null;
     hideConfirm();
     logMessage(resultText);
     renderItemList();
@@ -384,6 +436,7 @@
 
   function onItemConfirmNo() {
     state.pendingItemId = null;
+    state.pendingTargetIndex = null;
     hideConfirm();
   }
 
@@ -522,6 +575,7 @@
   // ---------- トースト ----------
   function closeAllWindows() {
     dom.itemWindow.hidden = true;
+    hideTargetList();
     dom.fleeWindow.hidden = true;
   }
 
