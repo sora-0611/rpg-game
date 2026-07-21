@@ -194,13 +194,16 @@
       let message;
       if (useGroupAttack) {
         aliveCharacters.forEach((target) => {
-          applyEnemyDamage(enemy, target);
+          // 全体攻撃だけ攻撃力を半分にする。
+          // enemy.attack 自体は変更しないため、次の単体攻撃やステータス表示には影響しない。
+          applyEnemyDamage(enemy, target, { isGroupAttack: true });
           if (target.hpCurrent <= 0) newlyDowned.push(target.name);
         });
         message = `${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`;
       } else {
         const target = aliveCharacters[Math.floor(Math.random() * aliveCharacters.length)];
-        const damage = applyEnemyDamage(enemy, target);
+        // 単体攻撃は従来どおり、敵の攻撃力をそのまま使用する。
+        const damage = applyEnemyDamage(enemy, target, { isGroupAttack: false });
         message = `${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`;
         if (target.hpCurrent <= 0) newlyDowned.push(target.name);
       }
@@ -223,12 +226,71 @@
     }
   }
 
-  // 被ダメージ計算（防御中は半減）。バランス仕様書に計算式の定義はないため、簡易な攻撃力-防御力方式を採用する
-  function applyEnemyDamage(enemy, target) {
-    let damage = Math.max(0, enemy.attack - target.defense);
-    if (target.isDefending) {
+  // ---------- ダメージ計算 ----------
+  // 戦闘中の通常攻撃で使う最小ダメージ。
+  // 攻撃力より防御力が高い場合でも、ダメージが0にならないように1を保証する。
+  const MIN_DAMAGE = 1;
+
+  /**
+   * 攻撃力と防御力から最終ダメージを計算する共通関数。
+   *
+   * 計算順序:
+   * 1. 全体攻撃の場合だけ、計算に使う攻撃力を半分にする
+   * 2. 攻撃力から防御力を引く
+   * 3. 防御コマンド中ならダメージを半分にする
+   * 4. 最後に最低1ダメージを保証する
+   *
+   * 元の attack 値は書き換えず、ローカル変数だけで計算する。
+   * そのため、敵の数値を後から変更しても、単体攻撃・表示・次のターンには影響しない。
+   *
+   * @param {number} attack 攻撃する側の攻撃力
+   * @param {number} defense 攻撃を受ける側の防御力
+   * @param {Object} options 追加の計算条件
+   * @param {boolean} options.isGroupAttack 全体攻撃かどうか
+   * @param {boolean} options.isDefending 対象が防御中かどうか
+   * @return {number} 1以上の整数ダメージ
+   */
+  function calculateDamage(
+    attack,
+    defense,
+    { isGroupAttack = false, isDefending = false } = {}
+  ) {
+    // 不正値が入っても計算結果がNaNにならないよう、有限の数値だけを採用する。
+    const safeAttack = Number.isFinite(attack) ? Math.max(0, attack) : 0;
+    const safeDefense = Number.isFinite(defense) ? Math.max(0, defense) : 0;
+
+    // 全体攻撃だけ攻撃力を50%にする。元の攻撃力は変更しない。
+    // 小数が出た場合は切り捨て、ゲーム内のダメージを整数に統一する。
+    const effectiveAttack = isGroupAttack
+      ? Math.floor(safeAttack * 0.5)
+      : safeAttack;
+
+    let damage = effectiveAttack - safeDefense;
+
+    // 防御中の半減は、全体攻撃の攻撃力補正とは別の処理として適用する。
+    if (isDefending) {
       damage = Math.ceil(damage / 2);
     }
+
+    // どのような攻撃力・防御力でも、通常攻撃は最低1ダメージになる。
+    return Math.max(MIN_DAMAGE, Math.floor(damage));
+  }
+
+  /**
+   * 敵の通常攻撃ダメージを対象へ反映する。
+   * @param {Object} enemy 攻撃する敵
+   * @param {Object} target 攻撃を受けるキャラクター
+   * @param {Object} options 攻撃種別
+   * @param {boolean} options.isGroupAttack 全体攻撃ならtrue
+   * @return {number} 実際に計算されたダメージ
+   */
+  function applyEnemyDamage(enemy, target, { isGroupAttack = false } = {}) {
+    const damage = calculateDamage(enemy.attack, target.defense, {
+      isGroupAttack,
+      isDefending: target.isDefending,
+    });
+
+    // HPは0未満にならないようにする。
     target.hpCurrent = Math.max(0, target.hpCurrent - damage);
     return damage;
   }
@@ -238,7 +300,9 @@
     if (state.phase !== "PLAYER_TURN") return;
     try {
       const attacker = getActingCharacter();
-      const damage = Math.max(0, attacker.attack - state.enemy.defense);
+      // プレイヤーの通常攻撃も共通関数を使い、最低1ダメージを保証する。
+      // 全体攻撃ではないため、攻撃力の半減は行わない。
+      const damage = calculateDamage(attacker.attack, state.enemy.defense);
       state.enemy.hpCurrent = Math.max(0, state.enemy.hpCurrent - damage);
       logMessage(`${attacker.name}の攻撃！${state.enemy.name}に${damage}のダメージを与えた。`);
       renderAll();
