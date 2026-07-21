@@ -7,7 +7,7 @@
 // ===== CONSTANTS =====
 const SAVE_VERSION = '1.0.0';
 const MAX_ENHANCE_LEVEL = 3;
-const INITIAL_COIN = 0;
+const INITIAL_COIN = 1000;
 const MAP_IDS = [1, 2, 3];
 const CHARACTER_IDS = ['A', 'B', 'C'];
 
@@ -26,7 +26,7 @@ const CHARACTERS = Object.freeze({
     name: 'セリス',
     baseHp: 20,
     baseAttack: 30,
-    baseDefense: 10,
+    baseDefense: 15,
     baseEquipmentId: 'eq002',
   }),
   'C': Object.freeze({
