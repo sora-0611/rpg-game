@@ -67,6 +67,7 @@
   // ---------- 初期化 ----------
 
   // 探索画面(gameState)から引き継いだHP・所持品・コインをローカルstateに反映する
+  // 引き継ぎ元が無い場合（単体で戦闘画面を開いた場合）はCHARACTERS_BASE/INITIAL_INVENTORYのまま
   function applyIncomingGameState() {
     const gameState = window.BRIDGE && BRIDGE.readRawGameState();
     if (!gameState) {
@@ -93,7 +94,7 @@
       .filter((entry) => entry.itemId !== undefined);
   }
 
-  // 戦闘開始処理
+  // 戦闘開始処理。enemyId未指定時は出現テーブルから抽選する（探索画面から渡される想定）
   function startBattle(enemyId) {
     try {
       const enemyTemplate = ENEMY_MASTER[enemyId] || ENEMY_MASTER[pickRandomEncounterId()];
@@ -109,13 +110,14 @@
       state.pendingTargetIndex = null;
       hideConfirm();
       closeAllWindows();
-
+      // 戦闘データが正しく揃ったのでHPバーを表示する（前回失敗時に非表示にした分を戻す）
       dom.enemyHpBlock.hidden = false;
       dom.playerHpBlock.hidden = false;
       startPlayerRound();
       logMessage(`${state.enemy.name}が現れた！`);
     } catch (error) {
       console.error(error);
+      // 戦闘データがない状態: HPバーは表示する情報が無いの非表示にする
       dom.enemyHpBlock.hidden = true;
       dom.playerHpBlock.hidden = true;
       showConfirm(
@@ -146,6 +148,7 @@
 
   // ---------- ターン制御 ----------
 
+  // プレイヤターン開始時: 生存キャラクターに行動順キューを作る（状態定義書: コマンド選択可能）
   function startPlayerRound() {
     state.turnQueue = state.characters
       .map((c, index) => index)
@@ -163,6 +166,7 @@
     return state.characters[state.actingIndex];
   }
 
+  // 1キャラクターの行動が終わったら次のキャラクターへ。全員終わったら敵ターンへ
   function advanceTurn() {
     state.turnQueue.shift();
     if (state.turnQueue.length === 0) {
@@ -175,6 +179,7 @@
     renderAll();
   }
 
+  // 敵ターン: singleAttack/groupAttackフラグに応じて単体または全体を攻撃する
   function enemyTurn() {
     if (state.phase !== "ENEMY_TURN") return;
     try {
@@ -189,16 +194,20 @@
       let message;
       if (useGroupAttack) {
         aliveCharacters.forEach((target) => {
+          // 全体攻撃だけ攻撃力を半分にする。
+          // enemy.attack 自体は変更しないため、次の単体攻撃やステータス表示には影響しない。
           applyEnemyDamage(enemy, target, { isGroupAttack: true });
           if (target.hpCurrent <= 0) newlyDowned.push(target.name);
         });
         message = `${enemy.name}の攻撃！パーティ全体が攻撃を受けた。`;
       } else {
         const target = aliveCharacters[Math.floor(Math.random() * aliveCharacters.length)];
+        // 単体攻撃は従来どおり、敵の攻撃力をそのまま使用する。
         const damage = applyEnemyDamage(enemy, target, { isGroupAttack: false });
         message = `${enemy.name}の攻撃！${target.name}は${damage}のダメージを受けた。`;
         if (target.hpCurrent <= 0) newlyDowned.push(target.name);
       }
+      // 戦闘不能になったキャラクターがいれば、行動が回ってこない理由が分かるように明示する
       if (newlyDowned.length > 0) {
         message += ` ${newlyDowned.join("、")}は戦闘不能になった！`;
       }
@@ -218,35 +227,70 @@
   }
 
   // ---------- ダメージ計算 ----------
+  // 戦闘中の通常攻撃で使う最小ダメージ。
+  // 攻撃力より防御力が高い場合でも、ダメージが0にならないように1を保証する。
   const MIN_DAMAGE = 1;
 
+  /**
+   * 攻撃力と防御力から最終ダメージを計算する共通関数。
+   *
+   * 計算順序:
+   * 1. 全体攻撃の場合だけ、計算に使う攻撃力を半分にする
+   * 2. 攻撃力から防御力を引く
+   * 3. 防御コマンド中ならダメージを半分にする
+   * 4. 最後に最低1ダメージを保証する
+   *
+   * 元の attack 値は書き換えず、ローカル変数だけで計算する。
+   * そのため、敵の数値を後から変更しても、単体攻撃・表示・次のターンには影響しない。
+   *
+   * @param {number} attack 攻撃する側の攻撃力
+   * @param {number} defense 攻撃を受ける側の防御力
+   * @param {Object} options 追加の計算条件
+   * @param {boolean} options.isGroupAttack 全体攻撃かどうか
+   * @param {boolean} options.isDefending 対象が防御中かどうか
+   * @return {number} 1以上の整数ダメージ
+   */
   function calculateDamage(
     attack,
     defense,
     { isGroupAttack = false, isDefending = false } = {}
   ) {
+    // 不正値が入っても計算結果がNaNにならないよう、有限の数値だけを採用する。
     const safeAttack = Number.isFinite(attack) ? Math.max(0, attack) : 0;
     const safeDefense = Number.isFinite(defense) ? Math.max(0, defense) : 0;
 
+    // 全体攻撃だけ攻撃力を50%にする。元の攻撃力は変更しない。
+    // 小数が出た場合は切り捨て、ゲーム内のダメージを整数に統一する。
     const effectiveAttack = isGroupAttack
       ? Math.floor(safeAttack * 0.5)
       : safeAttack;
 
     let damage = effectiveAttack - safeDefense;
 
+    // 防御中の半減は、全体攻撃の攻撃力補正とは別の処理として適用する。
     if (isDefending) {
       damage = Math.ceil(damage / 2);
     }
 
+    // どのような攻撃力・防御力でも、通常攻撃は最低1ダメージになる。
     return Math.max(MIN_DAMAGE, Math.floor(damage));
   }
 
+  /**
+   * 敵の通常攻撃ダメージを対象へ反映する。
+   * @param {Object} enemy 攻撃する敵
+   * @param {Object} target 攻撃を受けるキャラクター
+   * @param {Object} options 攻撃種別
+   * @param {boolean} options.isGroupAttack 全体攻撃ならtrue
+   * @return {number} 実際に計算されたダメージ
+   */
   function applyEnemyDamage(enemy, target, { isGroupAttack = false } = {}) {
     const damage = calculateDamage(enemy.attack, target.defense, {
       isGroupAttack,
       isDefending: target.isDefending,
     });
 
+    // HPは0未満にならないようにする。
     target.hpCurrent = Math.max(0, target.hpCurrent - damage);
     return damage;
   }
@@ -256,6 +300,8 @@
     if (state.phase !== "PLAYER_TURN") return;
     try {
       const attacker = getActingCharacter();
+      // プレイヤーの通常攻撃も共通関数を使い、最低1ダメージを保証する。
+      // 全体攻撃ではないため、攻撃力の半減は行わない。
       const damage = calculateDamage(attacker.attack, state.enemy.defense);
       state.enemy.hpCurrent = Math.max(0, state.enemy.hpCurrent - damage);
       logMessage(`${attacker.name}の攻撃！${state.enemy.name}に${damage}のダメージを与えた。`);
@@ -284,6 +330,7 @@
   function handleFleeButton() {
     if (state.phase !== "PLAYER_TURN") return;
     if (state.enemy.isBoss) {
+      // 状態定義書: 逃走不可（ボス戦）。ボタンは押せるが必ずエラー文言を表示する
       logMessage("今は逃げられない。");
       return;
     }
@@ -296,7 +343,7 @@
 
   function handleFleeYes() {
     closeFleeWindow();
-    const escaped = Math.random() < 0.7;
+    const escaped = Math.random() < 0.7; // 用語集: 逃げるは確率で失敗することがある
     if (escaped) {
       state.phase = "ESCAPED";
       logMessage("逃げた。");
@@ -339,6 +386,7 @@
     return state.inventory.reduce((sum, entry) => sum + entry.quantity, 0);
   }
 
+  // 単体回復アイテムの対象になり得るキャラクター（生存かつHP満タンでない）一覧
   function getAvailableSingleTargets() {
     return state.characters
       .map((character, index) => ({ character, index }))
@@ -348,6 +396,7 @@
   function isHpFullForItem(item) {
     if (item.effectType !== "HP回復") return false;
     if (item.target === "single") {
+      // 誰か1人でも対象になり得れば使用可能（対象は選択後に決まる）
       return getAvailableSingleTargets().length === 0;
     }
     if (item.target === "party") {
@@ -358,11 +407,13 @@
 
   function selectItem(itemId) {
     if (state.itemUsedThisOpen) {
+      // 1ターンに使えるアイテムは1つまで
       logMessage("このターンはすでにアイテムを使用しました。");
       return;
     }
     const item = ITEM_MASTER[itemId];
     if (!item.usableInBattle) {
+      // エラー・例外仕様書: 戦闘で使用できないアイテムを使う
       logMessage("このアイテムは戦闘では使用できません。");
       return;
     }
@@ -373,6 +424,7 @@
 
     state.pendingItemId = itemId;
 
+    // 単体対象アイテムは、まず「誰に使うか」を選んでもらう
     if (item.effectType === "HP回復" && item.target === "single") {
       showTargetList(getAvailableSingleTargets());
       return;
@@ -381,6 +433,7 @@
     showConfirm(`${item.name}を使用しますか？`, onItemConfirmYes, onItemConfirmNo);
   }
 
+  // 単体対象アイテムの対象選択リストを表示する
   function showTargetList(targets) {
     dom.itemList.hidden = true;
     dom.targetList.innerHTML = "";
@@ -401,6 +454,7 @@
     dom.itemList.hidden = false;
   }
 
+  // 対象キャラクター選択後、通常の使用確認へ進む
   function selectTarget(characterIndex) {
     state.pendingTargetIndex = characterIndex;
     const item = ITEM_MASTER[state.pendingItemId];
@@ -473,6 +527,8 @@
     }
   }
 
+  // 敵撃破時のアイテムドロップ抽選（3_詳細設計/4_バランス仕様書.md「アイテム」表に準拠）
+  // スロット数（itemDropCount）分、抽選候補プールから1つ選び、そのアイテム自身のdropRateで成否判定する
   function rollBattleItemDrops(enemy, slotCount) {
     const poolIds = enemy.isBoss ? BOSS_BATTLE_DROP_ITEM_IDS : MOB_BATTLE_DROP_ITEM_IDS;
     const obtainedCounts = {};
@@ -517,8 +573,10 @@
 
   // ---------- 探索画面への復帰 ----------
 
+  // 戦闘結果をgameStateに反映してlocalStorageへ書き戻す。
+  // 敗北時は探索画面のendBattleDefeat()と同じ仕様（全回復+開始位置(1,1)へリセット）に揃える。
+  // 勝利・逃亡時は実際のHP・所持品・コインをそのまま引き継ぐ。
   function applyBattleResultToGameState() {
-    if (!window.BRIDGE) return;
     const gameState = BRIDGE.readRawGameState();
     if (!gameState) return;
 
@@ -555,11 +613,11 @@
     BRIDGE.writeRawGameState(gameState);
   }
 
-  // 「戦闘終了」ボタン: 戦闘結果を保存して探索画面へ戻る
+  // 「戦闘終了」ボタン: 戦闘結果を反映して探索画面に戻る。
   function handleBattleEnd() {
     const battleOver = state.phase === "VICTORY" || state.phase === "DEFEAT" || state.phase === "ESCAPED";
     if (!battleOver) return;
-    
+
     applyBattleResultToGameState();
     window.location.assign("explore.html");
   }
@@ -628,6 +686,8 @@
     setHpBar(dom.enemyHpFill, dom.enemyHpValue, enemy.hpCurrent, enemy.hpMax);
   }
 
+  // ワイヤーフレームの「プレイヤー」枠は、行動中（または先頭の生存中）キャラクターを表示する
+  // VICTORY/ESCAPEDは直前まで行動していたキャラクターのHPをそのまま表示する（先頭生存者に切り替えるとHP表示が瞬間的に不一致に見えるため）
   function renderActiveCharacterBox() {
     const displayCharacter = state.phase === "PLAYER_TURN" || state.phase === "VICTORY" || state.phase === "ESCAPED"
       ? getActingCharacter()
@@ -638,6 +698,8 @@
     setHpBar(dom.playerHpFill, dom.playerHpValue, displayCharacter.hpCurrent, displayCharacter.hpMax);
   }
 
+  // パーティ全員のHP・戦闘不能状態を常時一覧表示する（行動中キャラだけだと誰が戦闘不能か分からず、
+  // なぜそのキャラにばかりターンが回ってくるのか分かりにくいため）
   function renderPartyStatus() {
     dom.partyStatus.innerHTML = "";
     state.characters.forEach((character, index) => {
@@ -714,6 +776,7 @@
   dom.fleeCloseButton.addEventListener("click", closeFleeWindow);
 
   // ---------- 起動 ----------
+  // ?enemy=boss1 のようにクエリ指定で出現敵を固定できる（探索画面からの遷移を想定したフック）
   function getEnemyIdFromQuery() {
     const params = new URLSearchParams(window.location.search);
     return params.get("enemy");
