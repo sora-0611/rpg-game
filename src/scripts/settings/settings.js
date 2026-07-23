@@ -216,7 +216,7 @@ if (backButton) {
         const referrer = document.referrer;
         const referrerUrl = referrer ? new URL(referrer, window.location.href) : null;
         const referrerPage = referrerUrl ? referrerUrl.pathname.split('/').pop() : '';
-        let targetPage = 'index.html';
+        let targetPage = '../index.html';
 
         if (fromParam === 'explore') {
             targetPage = 'explore.html';

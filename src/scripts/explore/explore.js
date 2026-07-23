@@ -125,6 +125,8 @@ function processLocationEvent(gameState, x, y) {
   }
 
   const messages = [];
+  // UI側が取得演出を選べるよう、今回アイテムを取得したかを記録する。
+  let obtainedItem = false;
 
   // 1. ボス位置をチェック
   if (MAP.isBossPosition(map, x, y)) {
@@ -148,6 +150,7 @@ function processLocationEvent(gameState, x, y) {
       if (itemData) {
         STATE.addItemToInventory(gameState, itemChest.itemId, 1);
         progress.openedChestIds.push(itemChest.chestId);
+        obtainedItem = true;
         messages.push(`${itemData.name}を手に入れた！`);
       }
     }
@@ -173,7 +176,11 @@ function processLocationEvent(gameState, x, y) {
     messages.push('移動しました。');
   }
 
-  return { success: true, message: messages.join('\n') };
+  return {
+    success: true,
+    message: messages.join('\n'),
+    isItem: obtainedItem,
+  };
 }
 
 /**
